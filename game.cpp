@@ -1,8 +1,15 @@
 #include <ncurses.h>
+#include <unistd.h>
 
 int main()
   {
   char users_name[ 100 ];
+  char tetrimino[5][5]=
+    {
+	{'O','O','O'},
+	{' ','O',' '}
+                        }; 
+
 
   initscr();
   (void)echo();
@@ -21,7 +28,13 @@ int main()
 
   printw( "\n\n\nPress ENTER to quit." );
   refresh();
-  getnstr( users_name, sizeof( users_name ) - 1 );
+  for (int i = 0; i < 100; i++){
+	mvprintw(i,30,tetrimino[0]);
+	mvprintw(i+1,30,tetrimino[1]);
+	refresh();
+	usleep(30000);
+	clear();
+  }
 
   endwin();
   return 0;
