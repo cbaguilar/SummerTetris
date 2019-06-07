@@ -1,33 +1,97 @@
 #include <ncurses.h>
 #include <unistd.h>
+#include <string>
 
 const int DEBUG_DELAY = 0;
 const int REFRESH_DELAY = 3000;
 const int NCOLUMNS = 10;
 const int NROWS = 20;
 
+using namespace std;
+
 class Tetrimino {
-  private:
+  protected:
     int x;
     int y;
     int orientation;
-  public:
-    char shape;
     
+
+
+  public:
+    string (*shapes)[5][5];
     
     void move(char gameboard[10][20] ) {
+      y++;
+    }
 
-    y++;
-  }
+    int getX(void) {
+      return x;
+    }
+
+    int getY(void) {
+      return y;
+    }
+
+    Tetrimino () {
+      //string testString = m_shapes[0][0];
+      //printw(testString.c_str());
+      //refresh();
+      sleep(1);
+     
+    }
+
+
+
+    string* getShape(void) {
+      
+      string testString = (*shapes)[0][0];
+      printw(testString.c_str());
+      refresh();
+      return 0;
+
+    }
+
+    
+
+
 };
 
 
-class TBlock {
-public:
-  char tetrimino[5][5] = {
-      {'O','O','O'},
-      {' ','O',' '}
-    };
+class TBlock : public Tetrimino {
+
+    public:
+    string m_shapes[5][5]= {
+                { " 0  ",
+                  "000 ",
+                  "    ",
+                  "    "},
+
+                { " 0  ",
+                  " 00 ",
+                  " 0  ",
+                  "    "},
+
+                { "    ",
+                  "000 ",
+                  " 0  ",
+                  "    ",
+                  "    ",},
+
+                { " 0  ",
+                  "000 ",
+                  "    ",
+                  "    ",
+                  "    ",}
+
+                };
+  
+
+    TBlock() : Tetrimino () {
+      
+      shapes = &m_shapes;
+    }
+      
+  
 };
 
 
@@ -81,6 +145,8 @@ int input(void) {
 int gameLoop(void) {
 
   TBlock t;
+  t.getShape();
+  sleep(1);
 
   char gameboard[NROWS][NCOLUMNS];
   /*for (auto& row : gameboard) {
