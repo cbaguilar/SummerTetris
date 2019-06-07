@@ -1,6 +1,4 @@
 #include <ncurses.h>
-
-
 #include <unistd.h>
 
 const int DEBUG_DELAY = 0;
@@ -8,21 +6,31 @@ const int REFRESH_DELAY = 3000;
 const int NCOLUMNS = 10;
 const int NROWS = 20;
 
-class TBlock {
+class Tetrimino {
   private:
     int x;
-  int y;
-  int orientation;
+    int y;
+    int orientation;
   public:
-    char tetrimino[5][5] = {
-      {'O','O','O'},
-      {' ','O',' '}
-    };
-  void move(char gameboard[10][20] ) {
+    char shape;
+    
+    
+    void move(char gameboard[10][20] ) {
 
     y++;
   }
 };
+
+
+class TBlock {
+public:
+  char tetrimino[5][5] = {
+      {'O','O','O'},
+      {' ','O',' '}
+    };
+};
+
+
 /*  Here I hope to make a game loop
 *   that is independent of any user
     interface: that is, it makes no
@@ -32,15 +40,27 @@ class TBlock {
     ing that
 */
 
+void debugDelay (void) {
+  usleep(DEBUG_DELAY);
+  if (DEBUG_DELAY > 0) {
+    refresh();
+  }
+}
 
 void display (char board[NROWS][NCOLUMNS]) {
+
+
   clear();
+  printw("Score: %s",""+10);
   for (int y = 0; y < NROWS; y++){
-    for (int x = 0; x < NCOLUMNS; x++) {
+   
+    /*for (int x = 0; x < NCOLUMNS; x++) {
       mvaddch(y,x,board[y][x]);
       //refresh();
       //usleep(DEBUG_DELAY);
-    }
+    }*/
+    mvaddnstr(y+1,0,board[y],10);
+    debugDelay();
   }
   refresh();
 }
@@ -60,6 +80,8 @@ int input(void) {
 
 int gameLoop(void) {
 
+  TBlock t;
+
   char gameboard[NROWS][NCOLUMNS];
   /*for (auto& row : gameboard) {
     for(auto& c  : row) {
@@ -69,7 +91,7 @@ int gameLoop(void) {
 
   for (int y = 0; y < NROWS; y++) {
     for (int x = 0; x < NCOLUMNS; x++) {
-      gameboard[y][x] = '.';
+      gameboard[y][x] = '0'+x;
     }
   }
 
@@ -113,6 +135,7 @@ int main() {
   sleep(1);
   nodelay(stdscr, TRUE);
   gameLoop();
+  sleep(1);
   endwin();
   return 0;
 }
