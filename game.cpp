@@ -2,22 +2,25 @@
 #include <unistd.h>
 #include <string>
 
-const int DEBUG_DELAY = 0;
+const int DEBUG_DELAY = 50000;
 const int REFRESH_DELAY = 3000;
 const int NCOLUMNS = 10;
 const int NROWS = 20;
 
 using namespace std;
 
+
+
 class Tetrimino {
   protected:
     int x;
     int y;
-    int orientation;
+    
     
 
 
   public:
+    int orientation = 0;
     string (*shapes)[5][5];
     
     void move(char gameboard[10][20] ) {
@@ -32,6 +35,17 @@ class Tetrimino {
       return y;
     }
 
+    void rotate(int direction) {
+      orientation += direction;
+      if (orientation == 4) {
+        orientation = 0;
+      }
+
+      if (orientation == -1) {
+        orientation = 3;
+      }
+    }
+
     Tetrimino () {
       //string testString = m_shapes[0][0];
       //printw(testString.c_str());
@@ -42,11 +56,17 @@ class Tetrimino {
 
 
 
-    string* getShape(void) {
+    char* getShape(void) {
+
+      int x = 0;
+      int y = 0;
       
-      string testString = (*shapes)[0][0];
-      printw(testString.c_str());
-      refresh();
+      for (int i = 0; i < 5; i++) {
+      printw((*shapes)[orientation][i].c_str());
+      printw("\n");
+      }
+      
+     
       return 0;
 
     }
@@ -61,25 +81,25 @@ class TBlock : public Tetrimino {
 
     public:
     string m_shapes[5][5]= {
-                { " 0  ",
-                  "000 ",
+                { " #  ",
+                  "### ",
                   "    ",
                   "    "},
 
-                { " 0  ",
-                  " 00 ",
-                  " 0  ",
+                { " #  ",
+                  " ## ",
+                  " #  ",
                   "    "},
 
                 { "    ",
-                  "000 ",
-                  " 0  ",
+                  "### ",
+                  " #  ",
                   "    ",
                   "    ",},
 
-                { " 0  ",
-                  "000 ",
-                  "    ",
+                { " #  ",
+                  "##  ",
+                  " #  ",
                   "    ",
                   "    ",}
 
@@ -94,6 +114,89 @@ class TBlock : public Tetrimino {
   
 };
 
+class OBlock : public Tetrimino {
+
+    public:
+    string m_shapes[5][5]= {
+                { "##  ",
+                  "##  ",
+                  "    ",
+                  "    "},
+
+                { "##  ",
+                  "##  ",
+                  "    ",
+                  "    "},
+
+                { "##  ",
+                  "##  ",
+                  "    ",
+                  "    ",
+                  "    ",},
+
+                { "##  ",
+                  "##  ",
+                  "    ",
+                  "    ",
+                  "    ",}
+
+                };
+  
+
+    OBlock() : Tetrimino () {
+      
+      shapes = &m_shapes;
+    }
+      
+  
+};
+
+
+
+
+
+
+
+void debugDelay (void) {
+  usleep(DEBUG_DELAY);
+  if (DEBUG_DELAY > 0) {
+    refresh();
+  }
+}
+
+void printTetrimino(char *Tetrimino){
+
+}
+
+void display (char board[NROWS][NCOLUMNS]) {
+
+  erase();
+  
+  printw("Score: %s",""+10);
+  for (int y = 0; y < NROWS; y++){
+   
+    /*for (int x = 0; x < NCOLUMNS; x++) {
+      mvaddch(y,x,board[y][x]);
+      //refresh();
+      //usleep(DEBUG_DELAY);
+    }*/  
+    mvaddnstr(y+1,0,board[y],10);
+    debugDelay();
+  }
+  refresh(); 
+} 
+
+char input(void) {
+    int ch = getch();
+    if (ch != ERR) {
+      //ungetch(ch);
+      return ch;
+    } else {
+      return 0;
+    }
+  }
+
+
 
 /*  Here I hope to make a game loop
 *   that is independent of any user
@@ -103,46 +206,8 @@ class TBlock : public Tetrimino {
     we end up do
     ing that
 */
-
-void debugDelay (void) {
-  usleep(DEBUG_DELAY);
-  if (DEBUG_DELAY > 0) {
-    refresh();
-  }
-}
-
-void display (char board[NROWS][NCOLUMNS]) {
-
-
-  clear();
-  printw("Score: %s",""+10);
-  for (int y = 0; y < NROWS; y++){
-   
-    /*for (int x = 0; x < NCOLUMNS; x++) {
-      mvaddch(y,x,board[y][x]);
-      //refresh();
-      //usleep(DEBUG_DELAY);
-    }*/
-    mvaddnstr(y+1,0,board[y],10);
-    debugDelay();
-  }
-  refresh();
-}
-
-int input(void) {
-    int ch = getch();
-    if (ch != ERR) {
-      ungetch(ch);
-      return 1;
-    } else {
-      return 0;
-    }
-  }
-
-
-
-
 int gameLoop(void) {
+
 
   TBlock t;
   t.getShape();
@@ -157,25 +222,40 @@ int gameLoop(void) {
 
   for (int y = 0; y < NROWS; y++) {
     for (int x = 0; x < NCOLUMNS; x++) {
-      gameboard[y][x] = '0'+x;
+      gameboard[y][x] = '.';
     }
   }
 
   bool gameOver = false;
   while (!gameOver){
-    display(gameboard);
+    //display(gameboard);
+    erase();
+    t.getShape();
     usleep(DEBUG_DELAY);
     usleep(REFRESH_DELAY);
-    if (input()) {
-      break;
+    switch (input()){
+      
+      case 'a': t.rotate(-1);
+        break;
+      case 'd': t.rotate(1);
+        break;
+      case 'q':
+        gameOver = true;
+        break;
+      default: t.rotate(0);
+        break;
+
     }
+
+    
+    refresh();
   }
   addstr("Game Over");
   refresh();
   return 0;
 }
 
-/* This is to detect input (currently
+/* This is to default tect input (currently
     key events)
   */
 
@@ -185,7 +265,7 @@ int main() {
   char users_name[100];
 
   initscr();
-  (void) echo();
+  (void) noecho();
 
   //addstr("What is your name> ");
   //refresh();
