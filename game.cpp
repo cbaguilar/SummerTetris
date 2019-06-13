@@ -2,10 +2,19 @@
 #include <unistd.h>
 #include <string>
 
-const int DEBUG_DELAY = 000000;
+const int DEBUG_DELAY = 00000;
 const int REFRESH_DELAY = 1666;
 const int NCOLUMNS = 10;
 const int NROWS = 20;
+
+const int UP = 'w';
+const int DOWN = 's';
+const int RIGHT = 'd';
+const int LEFT = 'a';
+const int ROTATE_LEFT = 'j';
+const int ROTATE_RIGHT = 'k';
+
+
 
 using namespace std;
 
@@ -50,7 +59,7 @@ class Tetrimino {
       //string testString = m_shapes[0][0];
       //printw(testString.c_str());
       //refresh();
-      sleep(1);
+      //sleep(1);
      
     }
 
@@ -219,19 +228,44 @@ void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
   refresh(); 
 } 
 
-char input(void) {
-    int ch = getch();
-    //mvprintw(20,10,"Code %s", ""+ch);
-    if (ch != ERR) {
-      //ungetch(ch);
-      return ch;
-    } else {
-      return 0;
-    }
+/*this input uses global consts so that input()
+ can be substitued for something else when the
+ platform or hardware change!*/
+
+int input(void) {
+    //int ch = getch();
+    int i = getch();
+  switch (i){
+    
+      case 't':
+        return 't';
+        break;
+      case 'o':
+        return 'o';
+        break;
+        
+      break;
+      case 'z': return ROTATE_LEFT;
+        break;
+      case 'x': return ROTATE_RIGHT;
+        break;
+      case 'q':
+        return 'q';
+        break;
+      case 'a':
+        return LEFT;
+        break;
+      case 'd':
+        return RIGHT;
+        break;
+        
+      default:
+      return i;
+      break;
   }
+    //return i;
 
-
-
+}
 /*  Here I hope to make a game loop
 *   that is independent of any user
     interface: that is, it makes no
@@ -240,8 +274,8 @@ char input(void) {
     we end up do
     ing that
 */
-int gameLoop(void) {
 
+int gameLoop(void) {
 
   
   OBlock o;
@@ -267,6 +301,12 @@ int gameLoop(void) {
 
   int dropTic = 0;
   while (!gameOver){
+   //char i = input();
+   //mvprintw(10,10,"Hey %s",""+getch());
+   //debugDelay();
+   //refresh();
+   
+
     if (dropTic == 100) {
       dropTic = 0;
      m->fall(); }
@@ -276,8 +316,10 @@ int gameLoop(void) {
     //t.getShape();
     usleep(DEBUG_DELAY);
     usleep(REFRESH_DELAY);
-   char i = input();
-   switch (i){
+
+
+   
+   switch (input()){
       case 't':
         m = &t;
         break;
@@ -285,38 +327,23 @@ int gameLoop(void) {
         m = &o;
         
       break;
-      case 'z': m->rotate(-1);
+      case ROTATE_LEFT: m->rotate(-1);
         break;
-      case 'x': m->rotate(1);
+      case ROTATE_RIGHT: m->rotate(1);
         break;
       case 'q':
         gameOver = true;
         break;
-      case '\033': 
-        getch();
-        switch(getch()) { // the real value
-        case 'A':
-            // code for arrow up
-            break;
-        case 'B':
-            // code for arrow down
-            break;
-        case 'C':
-            m->move(1);
-            break;
-        case 'D':
-            m->move(-1);
-            break;
-         }
+      case LEFT:
+        m->move(-1);
+        break;
+      case RIGHT:
+        m->move(1);
+        break;
       
 
     }
-
-    if (getch() == '\033') { // if the first value is esc
-    getch(); // skip the [
-    
-
-  }
+  
 
     
     refresh();
@@ -326,9 +353,6 @@ int gameLoop(void) {
   return 0;
 }
 
-/* This is to default tect input (currently
-    key events)
-  */
 
 
 
