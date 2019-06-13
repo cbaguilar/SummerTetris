@@ -2,8 +2,8 @@
 #include <unistd.h>
 #include <string>
 
-const int DEBUG_DELAY = 50000;
-const int REFRESH_DELAY = 3000;
+const int DEBUG_DELAY = 000000;
+const int REFRESH_DELAY = 1666;
 const int NCOLUMNS = 10;
 const int NROWS = 20;
 
@@ -23,8 +23,8 @@ class Tetrimino {
     int orientation = 0;
     string (*shapes)[5][5];
     
-    void move(char gameboard[10][20] ) {
-      y++;
+    void move(int dir) {
+      x+=dir;
     }
 
     int getX(void) {
@@ -54,20 +54,27 @@ class Tetrimino {
      
     }
 
+    void fall (void) {
+      if (y<16) {
+        y++;
+      }
+    }
 
 
-    char* getShape(void) {
+    char** getShape(void) {
 
-      int x = 0;
-      int y = 0;
-      
+     
+      char** shapeOut = 0;
+      shapeOut = new char*[5];
       for (int i = 0; i < 5; i++) {
-      printw((*shapes)[orientation][i].c_str());
-      printw("\n");
+        shapeOut[i] =const_cast<char*>((*shapes)[orientation][i].c_str());
+        
+      //printw((*shapes)[orientation][i].c_str());
+      //printw("\n");
       }
       
-     
-      return 0;
+      
+      return shapeOut;
 
     }
 
@@ -168,26 +175,53 @@ void printTetrimino(char *Tetrimino){
 
 }
 
-void display (char board[NROWS][NCOLUMNS]) {
+void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
 
   erase();
   
+  int x = block->getX();
+  int y = block->getY();
   printw("Score: %s",""+10);
   for (int y = 0; y < NROWS; y++){
    
-    /*for (int x = 0; x < NCOLUMNS; x++) {
+    for (int x = 0; x < NCOLUMNS; x++) {
+
       mvaddch(y,x,board[y][x]);
       //refresh();
       //usleep(DEBUG_DELAY);
-    }*/  
+    }
     mvaddnstr(y+1,0,board[y],10);
     debugDelay();
+
   }
+  
+
+
+
+      
+      move(y,x);
+      for (int i = 0; i < 4; i++) {
+
+        for (int j = 0; j < 4; j++) {
+       move(y+i,x+j);
+        char c =(block->getShape()[i][j]);
+        if (c!= ' ') {
+          addch(c);
+        }
+        
+        
+        }
+      }
+      
+     
+
+
   refresh(); 
 } 
 
 char input(void) {
     int ch = getch();
+    //mvprintw(20,10,"Code %s", ""+ch);
     if (ch != ERR) {
       //ungetch(ch);
       return ch;
@@ -209,14 +243,17 @@ char input(void) {
 int gameLoop(void) {
 
 
+  
+  OBlock o;
   TBlock t;
-  t.getShape();
-  sleep(1);
+  Tetrimino* m = &t;
+  //*m.getShape();
+  //sleep(1);
 
   char gameboard[NROWS][NCOLUMNS];
   /*for (auto& row : gameboard) {
     for(auto& c  : row) {
-      c = '0';
+      c = '0';sle==
     }
   }*/
 
@@ -227,25 +264,59 @@ int gameLoop(void) {
   }
 
   bool gameOver = false;
+
+  int dropTic = 0;
   while (!gameOver){
-    //display(gameboard);
-    erase();
-    t.getShape();
+    if (dropTic == 100) {
+      dropTic = 0;
+     m->fall(); }
+    dropTic++;
+    display(gameboard, m);
+    //erase();
+    //t.getShape();
     usleep(DEBUG_DELAY);
     usleep(REFRESH_DELAY);
-    switch (input()){
-      
-      case 'a': t.rotate(-1);
+   char i = input();
+   switch (i){
+      case 't':
+        m = &t;
         break;
-      case 'd': t.rotate(1);
+      case 'o':
+        m = &o;
+        
+      break;
+      case 'z': m->rotate(-1);
+        break;
+      case 'x': m->rotate(1);
         break;
       case 'q':
         gameOver = true;
         break;
-      default: t.rotate(0);
-        break;
+      case '\033': 
+        getch();
+        switch(getch()) { // the real value
+        case 'A':
+            // code for arrow up
+            break;
+        case 'B':
+            // code for arrow down
+            break;
+        case 'C':
+            m->move(1);
+            break;
+        case 'D':
+            m->move(-1);
+            break;
+         }
+      
 
     }
+
+    if (getch() == '\033') { // if the first value is esc
+    getch(); // skip the [
+    
+
+  }
 
     
     refresh();
@@ -278,7 +349,7 @@ int main() {
 
   printw("Starting game loop %s!\n", users_name);
   refresh();
-  sleep(1);
+  //sleep(1);
   nodelay(stdscr, TRUE);
   gameLoop();
   sleep(1);
