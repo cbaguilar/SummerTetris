@@ -14,23 +14,80 @@ const int LEFT = 'a';
 const int ROTATE_LEFT = 'j';
 const int ROTATE_RIGHT = 'k';
 
+const bool DEBUG_COLLISION = false;
+
 
 
 using namespace std;
 
+class Tetrimino;
+
+void placeBlock(char board[NROWS][NCOLUMNS], Tetrimino* block);
 
 
 class Tetrimino {
   protected:
-    int x;
-    int y;
+    int x = 4;
+    int y = 0;
     
     
-
-
+    
   public:
+    string name;
     int orientation = 0;
     string (*shapes)[5][5];
+
+    bool isTouchingFloor(char board[NROWS][NCOLUMNS]){
+      int probX = x;
+      int probY = y;
+      char probCell;
+      char probCellBelow;
+      char probBoard;
+      char** curShape = getShape();
+      for (int i = 0; i < 4; i++) {
+        probY = y+i;
+
+        for (int j = 0; j < 4; j++) {
+
+          probX = x+j;
+          probCell = curShape[i][j];
+          probCellBelow = curShape[i+1][j];
+          probBoard = board[y+i+1][x+j];
+          if ((probCell == '#')&&(probCellBelow !='#')){
+            if (probY >= 19) {
+              mvprintw(18,20,"CONTACT");
+              return true;
+
+            }
+            if 
+              (probBoard !='.'){
+                mvprintw(18,20,"CONTACT");
+                return true;
+              }
+
+          }
+          if (DEBUG_COLLISION){
+          ::move(probY,probX);
+          addch('x');
+          refresh();
+          ::move(probY,probX);
+          usleep(100000);
+          addch(probCell);
+          mvprintw(20,15," ProbX: %d ProbY %d ",probX, probY);
+          printw("ProbC: %c ",probCell);
+          printw("ProbB: %c",probBoard);
+          refresh();
+          }
+          //usleep(1000);
+        
+
+         // probX++;
+        }
+        //probY++;
+
+      }
+      return false;
+    }
     
     void move(int dir) {
       x+=dir;
@@ -63,9 +120,16 @@ class Tetrimino {
      
     }
 
-    void fall (void) {
-      if (y<16) {
+    void fall (char board[NROWS][NCOLUMNS]) {
+
+      if (!isTouchingFloor(board)) {
         y++;
+      }
+
+      else {
+        placeBlock(board, this);
+        x = 4;
+        y = 0;
       }
     }
 
@@ -77,25 +141,57 @@ class Tetrimino {
       shapeOut = new char*[5];
       for (int i = 0; i < 5; i++) {
         shapeOut[i] =const_cast<char*>((*shapes)[orientation][i].c_str());
-        
-      //printw((*shapes)[orientation][i].c_str());
-      //printw("\n");
       }
-      
-      
       return shapeOut;
-
     }
 
-    
-
-
+    void hardDrop(char board[NROWS][NCOLUMNS]) {
+      while(!isTouchingFloor(board)){
+        fall(board);
+      }
+    }
 };
+
+class IBlock : public Tetrimino {
+
+    private:
+    string m_shapes[5][5]= {
+                { "    ",
+                  "####",
+                  "    ",
+                  "    "},
+
+                { "  # ",
+                  "  # ",
+                  "  # ",
+                  "  # "},
+
+                { "    ",
+                  "    ",
+                  "####",
+                  "    ",
+                  "    ",},
+
+                { " #  ",
+                  " #  ",
+                  " #  ",
+                  " #  ",
+                  "    ",}
+
+                };
+  
+    public:
+    IBlock() : Tetrimino () {
+      name = "IBlock";
+      shapes = &m_shapes;
+    }
+};
+
 
 
 class TBlock : public Tetrimino {
 
-    public:
+    private:
     string m_shapes[5][5]= {
                 { " #  ",
                   "### ",
@@ -121,18 +217,16 @@ class TBlock : public Tetrimino {
 
                 };
   
-
+    public:
     TBlock() : Tetrimino () {
-      
+      name = "TBlock";
       shapes = &m_shapes;
     }
-      
-  
 };
 
 class OBlock : public Tetrimino {
 
-    public:
+    private:
     string m_shapes[5][5]= {
                 { "##  ",
                   "##  ",
@@ -158,30 +252,145 @@ class OBlock : public Tetrimino {
 
                 };
   
-
+    public:
     OBlock() : Tetrimino () {
-      
+      name = "Oblock";
       shapes = &m_shapes;
     }
-      
-  
 };
 
+class SBlock : public Tetrimino {
+
+    private:
+    string m_shapes[5][5]= {
+                { " ## ",
+                  "##  ",
+                  "    ",
+                  "    "},
+
+                { " #  ",
+                  " ## ",
+                  "  # ",
+                  "    "},
+
+                { "    ",
+                  " ## ",
+                  "##  ",
+                  "    ",
+                  "    ",},
+
+                { "#   ",
+                  "##  ",
+                  " #  ",
+                  "    ",
+                  "    ",}
+
+                };
+  
+    public:
+    SBlock() : Tetrimino () {
+      name = "SBlock";
+      shapes = &m_shapes;
+    }
+};
+
+class ZBlock : public Tetrimino {
+
+    private:
+    string m_shapes[5][5]= {
+                { "##  ",
+                  " ## ",
+                  "    ",
+                  "    "},
+
+                { "  # ",
+                  " ## ",
+                  " #  ",
+                  "    "},
+
+                { "    ",
+                  "##  ",
+                  " ## ",
+                  "    ",
+                  "    ",},
+
+                { " #  ",
+                  "##  ",
+                  "#   ",
+                  "    ",
+                  "    ",}
+
+                };
+  
+    public:
+    ZBlock() : Tetrimino () {
+      name = "Zblock";
+      shapes = &m_shapes;
+    }
+};
+
+class LBlock : public Tetrimino {
+
+    private:
+    string m_shapes[5][5]= {
+                { "  # ",
+                  "### ",
+                  "    ",
+                  "    "},
+
+                { " #  ",
+                  " #  ",
+                  " ## ",
+                  "    "},
+
+                { "    ",
+                  "### ",
+                  "#   ",
+                  "    ",
+                  "    ",},
+
+                { "##  ",
+                  " #  ",
+                  " #  ",
+                  "    ",
+                  "    ",}
+
+                };
+  
+    public:
+    LBlock() : Tetrimino () {
+      shapes = &m_shapes;
+    }
+};
+
+void placeBlock(char (board)[NROWS][NCOLUMNS], Tetrimino *block) {
+
+  int x =  block->getX();
+  int y = block->getY();
 
 
+  for (int i = 0; i < 4; i++) {
 
-
-
+        for (int j = 0; j < 4; j++) {
+       
+        char c =(block->getShape()[i][j]);
+        if (c!= ' ') {
+          board[y+i][x+j] = c;
+          if(DEBUG_COLLISION) {
+            mvaddch(y+i,x+j,c);
+            usleep(400000);
+            refresh();
+            }
+          } 
+        }
+      }
+    }
 
 void debugDelay (void) {
   usleep(DEBUG_DELAY);
   if (DEBUG_DELAY > 0) {
     refresh();
   }
-}
-
-void printTetrimino(char *Tetrimino){
-
 }
 
 void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
@@ -199,10 +408,13 @@ void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
       //refresh();
       //usleep(DEBUG_DELAY);
     }
-    mvaddnstr(y+1,0,board[y],10);
+    //mvaddnstr(y+1,0,board[y],10);
     debugDelay();
 
   }
+  printw(block->name.c_str());
+  printw("\n");
+  printw("X: %d Y: %d",block->getX(),block->getY());
   
 
 
@@ -237,21 +449,7 @@ int input(void) {
     int i = getch();
   switch (i){
     
-      case 't':
-        return 't';
-        break;
-      case 'o':
-        return 'o';
-        break;
-        
-      break;
-      case 'z': return ROTATE_LEFT;
-        break;
-      case 'x': return ROTATE_RIGHT;
-        break;
-      case 'q':
-        return 'q';
-        break;
+     
       case 'a':
         return LEFT;
         break;
@@ -277,10 +475,13 @@ int input(void) {
 
 int gameLoop(void) {
 
-  
-  OBlock o;
-  TBlock t;
-  Tetrimino* m = &t;
+  IBlock ib;
+  OBlock ob;
+  TBlock tb;
+  SBlock sb;
+  ZBlock zb;
+  LBlock lb;
+  Tetrimino* m = &tb;
   //*m.getShape();
   //sleep(1);
 
@@ -300,6 +501,7 @@ int gameLoop(void) {
   bool gameOver = false;
 
   int dropTic = 0;
+  int dropTime = 100;
   while (!gameOver){
    //char i = input();
    //mvprintw(10,10,"Hey %s",""+getch());
@@ -307,9 +509,9 @@ int gameLoop(void) {
    //refresh();
    
 
-    if (dropTic == 100) {
+    if (dropTic > dropTime) {
       dropTic = 0;
-     m->fall(); }
+     m->fall(gameboard); }
     dropTic++;
     display(gameboard, m);
     //erase();
@@ -321,12 +523,26 @@ int gameLoop(void) {
    
    switch (input()){
       case 't':
-        m = &t;
+        m = &tb;
         break;
       case 'o':
-        m = &o;
-        
-      break;
+        m = &ob;
+        break;
+      case 'i':
+        m = &ib;
+        break;
+      case UP:
+        m->hardDrop(gameboard);
+        break;
+      case DOWN:
+        dropTime = 10;
+        break;
+      case 'z':
+        m = &zb;
+        break;
+      case 'l':
+        m = &lb;
+        break;
       case ROTATE_LEFT: m->rotate(-1);
         break;
       case ROTATE_RIGHT: m->rotate(1);
@@ -340,6 +556,8 @@ int gameLoop(void) {
       case RIGHT:
         m->move(1);
         break;
+      default:
+        dropTime = 100;
       
 
     }
@@ -357,7 +575,6 @@ int gameLoop(void) {
 
 
 int main() {
-  char users_name[100];
 
   initscr();
   (void) noecho();
@@ -371,7 +588,7 @@ int main() {
   /* on the screen until <b>refresh</b>() is called.     */
   clear();
 
-  printw("Starting game loop %s!\n", users_name);
+  printw("Starting game loop!\n");
   refresh();
   //sleep(1);
   nodelay(stdscr, TRUE);
