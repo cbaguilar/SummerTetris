@@ -25,6 +25,10 @@ class Tetrimino;
 void placeBlock(char board[NROWS][NCOLUMNS], Tetrimino* block);
 
 
+/*abstract/parent class to define common 
+propertie of tetriminioes
+*/
+
 class Tetrimino {
   protected:
     int x = 4;
