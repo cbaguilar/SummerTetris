@@ -1,6 +1,7 @@
 #include <ncurses.h>
 #include <unistd.h>
 #include <string>
+#include <cstdlib>
 
 const int DEBUG_DELAY = 00000;
 const int REFRESH_DELAY = 1666;
@@ -26,16 +27,27 @@ void placeBlock(char board[NROWS][NCOLUMNS], Tetrimino* block);
 
 
 class Tetrimino {
+
+  private:
+    int touchTimer = 0;
+
   protected:
-    int x = 4;
-    int y = 0;
-    
+   
     
     
   public:
+    int x = 4;
+    int y = 0;
+    
     string name;
     int orientation = 0;
     string (*shapes)[5][5];
+
+    void reset(void){
+      x = 4;
+      y = 0;
+      touchTimer = 0;
+    }
 
     bool isTouchingFloor(char board[NROWS][NCOLUMNS]){
       int probX = x;
@@ -120,16 +132,27 @@ class Tetrimino {
      
     }
 
+    bool isRespawnReady(void){
+      return (touchTimer > 3);
+    }
+
+
+
+
     void fall (char board[NROWS][NCOLUMNS]) {
 
       if (!isTouchingFloor(board)) {
+        touchTimer = 0;
         y++;
       }
 
       else {
-        placeBlock(board, this);
-        x = 4;
-        y = 0;
+        touchTimer++;
+        if (touchTimer > 10) {
+        //placeBlock(board, this);
+        //reset();
+      }
+        
       }
     }
 
@@ -149,6 +172,7 @@ class Tetrimino {
       while(!isTouchingFloor(board)){
         fall(board);
       }
+      touchTimer = 11;
     }
 };
 
@@ -360,6 +384,42 @@ class LBlock : public Tetrimino {
     public:
     LBlock() : Tetrimino () {
       shapes = &m_shapes;
+      name = "LBlock";
+    }
+};
+
+class JBlock : public Tetrimino {
+
+    private:
+    string m_shapes[5][5]= {
+                { "#   ",
+                  "### ",
+                  "    ",
+                  "    "},
+
+                { " ## ",
+                  " #  ",
+                  " #  ",
+                  "    "},
+
+                { "    ",
+                  "### ",
+                  "  # ",
+                  "    ",
+                  "    ",},
+
+                { " #  ",
+                  " #  ",
+                  "##  ",
+                  "    ",
+                  "    ",}
+
+                };
+  
+    public:
+    JBlock() : Tetrimino () {
+      name = "JBlock";
+      shapes = &m_shapes;
     }
 };
 
@@ -464,6 +524,14 @@ int input(void) {
     //return i;
 
 }
+
+
+void randomizeTetrimino(Tetrimino** block, Tetrimino *allBlocks[]) {
+  *block = allBlocks[(rand()%7)];
+  (*block)->reset();
+
+}
+
 /*  Here I hope to make a game loop
 *   that is independent of any user
     interface: that is, it makes no
@@ -475,12 +543,18 @@ int input(void) {
 
 int gameLoop(void) {
 
+  
+  
   IBlock ib;
   OBlock ob;
   TBlock tb;
   SBlock sb;
   ZBlock zb;
   LBlock lb;
+  JBlock jb;
+
+  Tetrimino *allBlocks[] = {&ib,&ob,&tb,&sb,&zb,&lb,&jb};
+
   Tetrimino* m = &tb;
   //*m.getShape();
   //sleep(1);
@@ -499,7 +573,8 @@ int gameLoop(void) {
   }
 
   bool gameOver = false;
-
+  
+  int landTime = 0;
   int dropTic = 0;
   int dropTime = 100;
   while (!gameOver){
@@ -509,10 +584,19 @@ int gameLoop(void) {
    //refresh();
    
 
+
     if (dropTic > dropTime) {
       dropTic = 0;
-     m->fall(gameboard); }
+     m->fall(gameboard); 
+        
+    }
     dropTic++;
+
+    if (m->isRespawnReady()) {
+      placeBlock(gameboard, m);
+      randomizeTetrimino(&m, allBlocks);
+    }
+    
     display(gameboard, m);
     //erase();
     //t.getShape();
@@ -523,10 +607,10 @@ int gameLoop(void) {
    
    switch (input()){
       case 't':
-        m = &tb;
+        m = allBlocks[rand()%7];
         break;
       case 'o':
-        m = &ob;
+        m = allBlocks[1];
         break;
       case 'i':
         m = &ib;
@@ -561,7 +645,7 @@ int gameLoop(void) {
       
 
     }
-  
+     //mvprintw(14,10,"Number = %s",*allBlocks[(rand()%8)]->name);
 
     
     refresh();
