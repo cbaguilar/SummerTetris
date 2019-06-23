@@ -53,7 +53,12 @@ class Tetrimino {
       touchTimer = 0;
     }
 
-    bool isTouchingFloor(char board[NROWS][NCOLUMNS]){
+    bool outOfBounds(int x,int y) {
+      return (x<0)||(y<0)||(x>NCOLUMNS-1)||(y>NROWS);
+    }
+
+    bool isTouchingSide(char board[NROWS][NCOLUMNS], int offSetX) {
+      int offSetY = 0;
       int probX = x;
       int probY = y;
       char probCell;
@@ -67,8 +72,61 @@ class Tetrimino {
 
           probX = x+j;
           probCell = curShape[i][j];
-          probCellBelow = curShape[i+1][j];
-          probBoard = board[y+i+1][x+j];
+          probCellBelow = curShape[i+offSetY][j+offSetX];
+          probBoard = board[y+i+offSetY][x+j+offSetX];
+          if ((probCell == '#')&&(probCellBelow !='#')){
+            if (outOfBounds(probX+offSetX,probY)) {
+              mvprintw(18,20,"CONTACT");
+              return true;
+
+            }
+            if 
+              (probBoard !='.'){
+                mvprintw(18,20,"CONTACT");
+                return true;
+              }
+
+          }
+          if (DEBUG_COLLISION){
+          ::move(probY,probX);
+          addch('x');
+          refresh();
+          ::move(probY,probX);
+          usleep(100000);
+          addch(probCell);
+          mvprintw(20,15," ProbX: %d ProbY %d ",probX, probY);
+          printw("ProbC: %c ",probCell);
+          printw("ProbB: %c",probBoard);
+          refresh();
+          }
+          //usleep(1000);
+        
+
+         // probX++;
+        }
+        //probY++;
+
+      }
+      return false;
+    }
+    
+
+    bool isTouchingFloor(char board[NROWS][NCOLUMNS], int offSetX, int offSetY){
+      int probX = x;
+      int probY = y;
+      char probCell;
+      char probCellBelow;
+      char probBoard;
+      char** curShape = getShape();
+      for (int i = 0; i < 4; i++) {
+        probY = y+i;
+
+        for (int j = 0; j < 4; j++) {
+
+          probX = x+j;
+          probCell = curShape[i][j];
+          probCellBelow = curShape[i+offSetY][j+offSetX];
+          probBoard = board[y+i+offSetY][x+j+offSetX];
           if ((probCell == '#')&&(probCellBelow !='#')){
             if (probY >= 19) {
               mvprintw(18,20,"CONTACT");
@@ -105,8 +163,10 @@ class Tetrimino {
       return false;
     }
     
-    void move(int dir) {
-      x+=dir;
+    void move(char board[NROWS][NCOLUMNS], int dir) {
+      if (!isTouchingSide(board,dir)) {
+        x+=dir;
+      }
     }
 
     int getX(void) {
@@ -145,7 +205,7 @@ class Tetrimino {
 
     void fall (char board[NROWS][NCOLUMNS]) {
 
-      if (!isTouchingFloor(board)) {
+      if (!isTouchingFloor(board,0,1)) {
         touchTimer = 0;
         y++;
       }
@@ -173,7 +233,7 @@ class Tetrimino {
     }
 
     void hardDrop(char board[NROWS][NCOLUMNS]) {
-      while(!isTouchingFloor(board)){
+      while(!isTouchingFloor(board,0,1)){
         fall(board);
       }
       touchTimer = 11;
@@ -597,6 +657,9 @@ int gameLoop(void) {
     dropTic++;
 
     if (m->isRespawnReady()) {
+      if (m->getY() == 0) {
+        gameOver = true;
+      }
       placeBlock(gameboard, m);
       randomizeTetrimino(&m, allBlocks);
     }
@@ -639,10 +702,10 @@ int gameLoop(void) {
         gameOver = true;
         break;
       case LEFT:
-        m->move(-1);
+        m->move(gameboard, -1);
         break;
       case RIGHT:
-        m->move(1);
+        m->move(gameboard, 1);
         break;
       default:
         dropTime = 100;
