@@ -80,13 +80,13 @@ class Tetrimino {
           probBoard = board[y+i+offSetY][x+j+offSetX];
           if ((probCell == '#')&&(probCellBelow !='#')){
             if (outOfBounds(probX+offSetX,probY)) {
-              mvprintw(18,20,"CONTACT");
+             // mvprintw(18,20,"CONTACT");
               return true;
 
             }
             if 
               (probBoard !='.'){
-                mvprintw(18,20,"CONTACT");
+              //  mvprintw(18,20,"CONTACT");
                 return true;
               }
 
@@ -674,10 +674,12 @@ void clearLines(char (board)[NROWS][NCOLUMNS], Tetrimino * block) {
       if (!(probCell=='#')) {
         break;
       }
-      mvaddch(probRow,probColumn,'X');
-      refresh();
-      //usleep(100000);
-      mvaddch(probRow,probColumn,probCell);
+      if (DEBUG_COLLISION) {
+        mvaddch(probRow,probColumn,'X');
+        refresh();
+        //usleep(100000);
+        mvaddch(probRow,probColumn,probCell);
+      }
     }
     if (probColumn == NCOLUMNS) {
       rowsToDelete.push_back(probRow);
