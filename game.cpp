@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <string>
 #include <cstdlib>
+#include <vector>
+#include <iostream>
 
 const int DEBUG_DELAY = 00000;
 const int REFRESH_DELAY = 1666;
@@ -18,6 +20,8 @@ const int ROTATE_RIGHT = 'k';
 const bool DEBUG_COLLISION = false;
 
 
+int linesCleared = 0;
+int score = 0;
 
 using namespace std;
 
@@ -528,7 +532,13 @@ void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
    
     for (int x = 0; x < NCOLUMNS; x++) {
 
-      mvaddch(y,x,board[y][x]);
+      char curChar = board[y][x];
+      if (curChar == '#') {
+       mvaddch(y,x,(char)0x2588);
+      }
+      else {
+        mvaddch(y,x,curChar);
+      }
       //refresh();
       //usleep(DEBUG_DELAY);
     }
@@ -539,6 +549,7 @@ void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
   printw(block->name.c_str());
   printw("\n");
   printw("X: %d Y: %d",block->getX(),block->getY());
+  mvprintw(7,14,"Lines Cleared: %i",linesCleared);
   
 
 
@@ -551,7 +562,7 @@ void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
        move(y+i,x+j);
         char c =(block->getShape()[i][j]);
         if (c!= ' ') {
-          addch(c);
+          addch((char)0x2588);
         }
         
         
@@ -594,6 +605,98 @@ void randomizeTetrimino(Tetrimino** block, Tetrimino *allBlocks[]) {
   *block = allBlocks[(rand()%7)];
   (*block)->reset();
 
+}
+
+void clearLine(char (board)[NROWS][NCOLUMNS], int rowToDelete) {
+  char tempBoard[NROWS][NCOLUMNS];/*
+  for (int c = 0; c < NCOLUMNS; c++) { //fill top row with blanks
+    tempBoard[0][c] = '.';
+  }
+  for (int r = 1; r < rowToDelete; r++) { //copy following rows
+    for (int c = 0; c < NCOLUMNS; c++) {
+      tempBoard[r][c] = board[r-1][c];
+    }
+  }
+  */
+  for (int r = rowToDelete; r > 0; r--) {
+    for (int c = 0; c < NCOLUMNS; c++) {
+      board[r][c] = board[r-1][c];
+    }
+  }
+  for (int c = 0; c < NCOLUMNS; c++) { //fill top row with blanks
+    board[0][c] = '.';
+  }
+
+
+}
+
+void blinkLine(char board[NROWS][NCOLUMNS], int row) {
+  
+      for (int c = 0; c < NCOLUMNS; c++) {
+        mvaddch(row,c,'*');
+        beep();
+      }
+    
+  
+}
+
+void flashyEffect(char board[NROWS][NCOLUMNS], vector<int>& rowsToDelete, Tetrimino * block) {
+  
+
+    for (int i = 0; i < 10; i++) {
+      for (int f = 0; f < rowsToDelete.size(); f++) {
+      blinkLine(board,rowsToDelete[f]);
+      }
+      refresh();
+      usleep(10000);
+      display(board, block);
+      refresh();
+      usleep(10000);
+    }
+  
+}
+
+void clearLines(char (board)[NROWS][NCOLUMNS], Tetrimino * block) {
+  //char tempBoard[NROWS][NCOLUMNS];
+  mvprintw(5,15,"Clearing lines...");
+  refresh();
+  usleep(1000);
+
+  vector  <int> rowsToDelete;
+  int probRow = 0;
+  int probColumn = 0;
+  for (probRow = 0; probRow <= NROWS; probRow++) {
+    for (probColumn = 0; probColumn < NCOLUMNS; probColumn++) {
+      char probCell = board[probRow][probColumn];
+      mvprintw(7,15,"Probing row %i column %i tested cell %c",probRow,probColumn,probCell);
+      
+      
+      if (!(probCell=='#')) {
+        break;
+      }
+      mvaddch(probRow,probColumn,'X');
+      refresh();
+      //usleep(100000);
+      mvaddch(probRow,probColumn,probCell);
+    }
+    if (probColumn == NCOLUMNS) {
+      rowsToDelete.push_back(probRow);
+    }
+    mvprintw(7,15,"Row cleared");
+    refresh();
+    //usleep(100000);
+  }
+
+  flashyEffect(board, rowsToDelete, block);
+
+  for (int i = 0; i < rowsToDelete.size(); i++) {
+
+    
+      linesCleared++;
+      clearLine(board, rowsToDelete[i]);
+      
+    
+  }
 }
 
 /*  Here I hope to make a game loop
@@ -661,6 +764,7 @@ int gameLoop(void) {
         gameOver = true;
       }
       placeBlock(gameboard, m);
+      clearLines(gameboard, m);
       randomizeTetrimino(&m, allBlocks);
     }
     
@@ -728,6 +832,7 @@ int gameLoop(void) {
 int main() {
 
   initscr();
+  curs_set(0);
   (void) noecho();
 
   //addstr("What is your name> ");
