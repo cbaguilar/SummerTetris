@@ -19,18 +19,18 @@ const int ROTATE_RIGHT = 'k';
 
 const bool DEBUG_COLLISION = false;
 
-const char OUTPUT_CH = (char)0x2588;
+const char DISPLAY_CH = '#'; //(char)0x2588;
 
 const char CELL_SHAPES[8] = {'I','O','T','S','Z','L','J','#'};
 
-const int IBLOCK_COLOR = 0;
-const int OBLOCK_COLOR = 1;
-const int TBLOCK_COLOR = 2;
-const int SBLOCK_COLOR = 3;
-const int ZBLOCK_COLOR = 4;
-const int LBLOCK_COLOR = 5;
-const int JBLOCK_COLOR = 6;
-const int HASHCOLOR = 5;
+const int IBLOCK_COLOR = 1;
+const int OBLOCK_COLOR = 2;
+const int TBLOCK_COLOR = 3;
+const int SBLOCK_COLOR = 4;
+const int ZBLOCK_COLOR = 5;
+const int LBLOCK_COLOR = 6;
+const int JBLOCK_COLOR = 7;
+const int HASHCOLOR = 8;
 
 int linesCleared = 0;
 int score = 0;
@@ -43,6 +43,8 @@ void placeBlock(char board[NROWS][NCOLUMNS], Tetrimino* block);
 
 
 int charToColor(char c) {
+  //mvprintw(3,10,"%c",c);
+  //refresh();
   switch (c) {
     case 'I': 
       return IBLOCK_COLOR;
@@ -291,25 +293,25 @@ class IBlock : public Tetrimino {
     private:
     string m_shapes[5][5]= {
                 { "    ",
-                  "####",
+                  "IIII",
                   "    ",
                   "    "},
 
-                { "  # ",
-                  "  # ",
-                  "  # ",
-                  "  # "},
+                { "  I ",
+                  "  I ",
+                  "  I ",
+                  "  I "},
 
                 { "    ",
                   "    ",
-                  "####",
+                  "IIII",
                   "    ",
                   "    ",},
 
-                { " #  ",
-                  " #  ",
-                  " #  ",
-                  " #  ",
+                { " I  ",
+                  " I  ",
+                  " I  ",
+                  " I  ",
                   "    ",}
 
                 };
@@ -327,25 +329,25 @@ class TBlock : public Tetrimino {
 
     private:
     string m_shapes[5][5]= {
-                { " #  ",
-                  "### ",
+                { " T  ",
+                  "TTT ",
                   "    ",
                   "    "},
 
-                { " #  ",
-                  " ## ",
-                  " #  ",
+                { " T  ",
+                  " TT ",
+                  " T  ",
                   "    "},
 
                 { "    ",
-                  "### ",
-                  " #  ",
+                  "TTT ",
+                  " T  ",
                   "    ",
                   "    ",},
 
-                { " #  ",
-                  "##  ",
-                  " #  ",
+                { " T  ",
+                  "TT  ",
+                  " T  ",
                   "    ",
                   "    ",}
 
@@ -362,24 +364,24 @@ class OBlock : public Tetrimino {
 
     private:
     string m_shapes[5][5]= {
-                { "##  ",
-                  "##  ",
+                { "OO  ",
+                  "OO  ",
                   "    ",
                   "    "},
 
-                { "##  ",
-                  "##  ",
+                { "OO  ",
+                  "OO  ",
                   "    ",
                   "    "},
 
-                { "##  ",
-                  "##  ",
+                { "OO  ",
+                  "OO  ",
                   "    ",
                   "    ",
                   "    ",},
 
-                { "##  ",
-                  "##  ",
+                { "OO  ",
+                  "OO  ",
                   "    ",
                   "    ",
                   "    ",}
@@ -397,25 +399,25 @@ class SBlock : public Tetrimino {
 
     private:
     string m_shapes[5][5]= {
-                { " ## ",
-                  "##  ",
+                { " SS ",
+                  "SS  ",
                   "    ",
                   "    "},
 
-                { " #  ",
-                  " ## ",
-                  "  # ",
+                { " S  ",
+                  " SS ",
+                  "  S ",
                   "    "},
 
                 { "    ",
-                  " ## ",
-                  "##  ",
+                  " SS ",
+                  "SS  ",
                   "    ",
                   "    ",},
 
-                { "#   ",
-                  "##  ",
-                  " #  ",
+                { "S   ",
+                  "SS  ",
+                  " S  ",
                   "    ",
                   "    ",}
 
@@ -432,25 +434,25 @@ class ZBlock : public Tetrimino {
 
     private:
     string m_shapes[5][5]= {
-                { "##  ",
-                  " ## ",
+                { "ZZ  ",
+                  " ZZ ",
                   "    ",
                   "    "},
 
-                { "  # ",
-                  " ## ",
-                  " #  ",
+                { "  Z ",
+                  " ZZ ",
+                  " Z  ",
                   "    "},
 
                 { "    ",
-                  "##  ",
-                  " ## ",
+                  "ZZ  ",
+                  " ZZ ",
                   "    ",
                   "    ",},
 
-                { " #  ",
-                  "##  ",
-                  "#   ",
+                { " Z  ",
+                  "ZZ  ",
+                  "Z   ",
                   "    ",
                   "    ",}
 
@@ -467,25 +469,25 @@ class LBlock : public Tetrimino {
 
     private:
     string m_shapes[5][5]= {
-                { "  # ",
-                  "### ",
+                { "  L ",
+                  "LLL ",
                   "    ",
                   "    "},
 
-                { " #  ",
-                  " #  ",
-                  " ## ",
+                { " L  ",
+                  " L  ",
+                  " LL ",
                   "    "},
 
                 { "    ",
-                  "### ",
-                  "#   ",
+                  "LLL ",
+                  "L   ",
                   "    ",
                   "    ",},
 
-                { "##  ",
-                  " #  ",
-                  " #  ",
+                { "LL  ",
+                  " L  ",
+                  " L  ",
                   "    ",
                   "    ",}
 
@@ -502,25 +504,25 @@ class JBlock : public Tetrimino {
 
     private:
     string m_shapes[5][5]= {
-                { "#   ",
-                  "### ",
+                { "J   ",
+                  "JJJ ",
                   "    ",
                   "    "},
 
-                { " ## ",
-                  " #  ",
-                  " #  ",
+                { " JJ ",
+                  " J  ",
+                  " J  ",
                   "    "},
 
                 { "    ",
-                  "### ",
-                  "  # ",
+                  "JJJ ",
+                  "  J ",
                   "    ",
                   "    ",},
 
-                { " #  ",
-                  " #  ",
-                  "##  ",
+                { " J  ",
+                  " J  ",
+                  "JJ  ",
                   "    ",
                   "    ",}
 
@@ -575,12 +577,17 @@ void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
     for (int x = 0; x < NCOLUMNS; x++) {
 
       char curChar = board[y][x];
+      attron(COLOR_PAIR(charToColor(curChar)));
       if (cellFilled(curChar)) {
-       mvaddch(y,x,(char)0x2588);
+       
+       mvaddch(y,x,DISPLAY_CH);
+       //attroff(COLOR_PAIR(3));
       }
       else {
+
         mvaddch(y,x,curChar);
       }
+      attroff(COLOR_PAIR(charToColor(curChar)));
       //refresh();
       //usleep(DEBUG_DELAY);
     }
@@ -590,6 +597,7 @@ void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
   }
   printw(block->name.c_str());
   printw("\n");
+
   printw("X: %d Y: %d",block->getX(),block->getY());
   mvprintw(7,14,"Lines Cleared: %i",linesCleared);
   
@@ -603,8 +611,12 @@ void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
         for (int j = 0; j < 4; j++) {
        move(y+i,x+j);
         char c =(block->getShape()[i][j]);
-        if (c!= ' ') {
-          addch((char)0x2588);
+        if (cellFilled(c)) {
+          attron(COLOR_PAIR(charToColor(c)));
+
+          addch(DISPLAY_CH);
+      
+          attroff(COLOR_PAIR(charToColor(c)));
         }
         
         
@@ -713,7 +725,7 @@ void clearLines(char (board)[NROWS][NCOLUMNS], Tetrimino * block) {
       mvprintw(7,15,"Probing row %i column %i tested cell %c",probRow,probColumn,probCell);
       
       
-      if (!(probCell=='#')) {
+      if (!cellFilled(probCell)) {
         break;
       }
       if (DEBUG_COLLISION) {
@@ -726,7 +738,7 @@ void clearLines(char (board)[NROWS][NCOLUMNS], Tetrimino * block) {
     if (probColumn == NCOLUMNS) {
       rowsToDelete.push_back(probRow);
     }
-    mvprintw(7,15,"Row cleared");
+    //mvprintw(7,15,"Row cleared");
     refresh();
     //usleep(100000);
   }
@@ -865,7 +877,7 @@ int gameLoop(void) {
     
     refresh();
   }
-  addstr("Game Over");
+  mvaddstr(10,0," GameOver");
   refresh();
   return 0;
 }
@@ -877,7 +889,7 @@ int main() {
 
 
   initscr();
-  curs_set(0);
+  curs_set(0);/*
   if (has_colors() == FALSE) {
     endwin();
     printf("Terminal does not support colors");
@@ -893,7 +905,17 @@ int main() {
     init_pair(4, COLOR_RED, COLOR_BLACK);
     init_pair(5, COLOR_WHITE, COLOR_BLACK);
     init_pair(7, COLOR_BLUE, COLOR_BLACK);
-  }
+  }*/
+  start_color();
+    init_pair(1, COLOR_CYAN, COLOR_CYAN);
+    init_pair(2, COLOR_YELLOW, COLOR_YELLOW);
+    init_pair(3, COLOR_MAGENTA, COLOR_MAGENTA);
+    init_pair(4, COLOR_GREEN, COLOR_GREEN);
+    init_pair(5, COLOR_RED, COLOR_RED);
+    init_pair(6, COLOR_WHITE, COLOR_WHITE);
+    init_pair(7, COLOR_BLUE, COLOR_BLUE);
+    init_pair(8, COLOR_WHITE, COLOR_BLACK);
+   // init_pair(7, COLOR_BLUE, COLOR_BLACK);
 
   (void) noecho();
 
@@ -905,10 +927,14 @@ int main() {
   /* (Remember, when using Curses, no change will appear */
   /* on the screen until <b>refresh</b>() is called.     */
   clear();
-
+  
   printw("Starting game loop!\n");
+ 
   refresh();
-  //sleep(1);
+  
+  
+
+  sleep(1);
   nodelay(stdscr, TRUE);
   gameLoop();
   sleep(1);
