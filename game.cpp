@@ -19,6 +19,7 @@ const int ROTATE_RIGHT = 'k';
 
 const bool DEBUG_COLLISION = false;
 
+const char CELL_SHAPES[7] = {'I','0','T','S','Z','L','J'};
 
 int linesCleared = 0;
 int score = 0;
@@ -33,6 +34,14 @@ void placeBlock(char board[NROWS][NCOLUMNS], Tetrimino* block);
 /*abstract/parent class to define common 
 propertie of tetriminioes
 */
+bool cellFilled(char cell) {
+  for (char c : CELL_SHAPES) {
+    if (cell == c) {
+      return true;
+    }
+  }
+  return false;
+}
 
 class Tetrimino {
 
@@ -509,7 +518,7 @@ void placeBlock(char (board)[NROWS][NCOLUMNS], Tetrimino *block) {
             usleep(400000);
             refresh();
             }
-          } 
+          }  
         }
       }
     }
@@ -833,8 +842,26 @@ int gameLoop(void) {
 
 int main() {
 
+
   initscr();
   curs_set(0);
+  if (has_colors() == FALSE) {
+    endwin();
+    printf("Terminal does not support colors");
+    exit(1);
+  }
+
+  else {
+    start_color();
+    init_pair(0, COLOR_CYAN, COLOR_BLACK);
+    init_pair(1, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(2, COLOR_MAGENTA, COLOR_BLACK);
+    init_pair(3, COLOR_GREEN, COLOR_BLACK);
+    init_pair(4, COLOR_RED, COLOR_BLACK);
+    init_pair(5, COLOR_WHITE, COLOR_BLACK);
+    init_pair(7, COLOR_BLUE, COLOR_BLACK);
+  }
+
   (void) noecho();
 
   //addstr("What is your name> ");
