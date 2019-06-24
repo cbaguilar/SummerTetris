@@ -19,7 +19,18 @@ const int ROTATE_RIGHT = 'k';
 
 const bool DEBUG_COLLISION = false;
 
-const char CELL_SHAPES[7] = {'I','0','T','S','Z','L','J'};
+const char OUTPUT_CH = (char)0x2588;
+
+const char CELL_SHAPES[8] = {'I','O','T','S','Z','L','J','#'};
+
+const int IBLOCK_COLOR = 0;
+const int OBLOCK_COLOR = 1;
+const int TBLOCK_COLOR = 2;
+const int SBLOCK_COLOR = 3;
+const int ZBLOCK_COLOR = 4;
+const int LBLOCK_COLOR = 5;
+const int JBLOCK_COLOR = 6;
+const int HASHCOLOR = 5;
 
 int linesCleared = 0;
 int score = 0;
@@ -31,9 +42,31 @@ class Tetrimino;
 void placeBlock(char board[NROWS][NCOLUMNS], Tetrimino* block);
 
 
-/*abstract/parent class to define common 
-propertie of tetriminioes
-*/
+int charToColor(char c) {
+  switch (c) {
+    case 'I': 
+      return IBLOCK_COLOR;
+    case 'O':
+      return OBLOCK_COLOR;
+    case 'T':
+      return TBLOCK_COLOR;
+    case 'S':
+      return SBLOCK_COLOR;
+    case 'Z':
+      return ZBLOCK_COLOR;
+    case 'L':
+      return LBLOCK_COLOR;
+    case 'J':
+      return JBLOCK_COLOR;
+    case '#':
+      return HASHCOLOR;
+    default:
+      return HASHCOLOR;
+
+    
+  }
+}
+
 bool cellFilled(char cell) {
   for (char c : CELL_SHAPES) {
     if (cell == c) {
@@ -87,7 +120,7 @@ class Tetrimino {
           probCell = curShape[i][j];
           probCellBelow = curShape[i+offSetY][j+offSetX];
           probBoard = board[y+i+offSetY][x+j+offSetX];
-          if ((probCell == '#')&&(probCellBelow !='#')){
+          if ((cellFilled(probCell)&&(!cellFilled(probCellBelow)))){
             if (outOfBounds(probX+offSetX,probY)) {
              // mvprintw(18,20,"CONTACT");
               return true;
@@ -140,14 +173,14 @@ class Tetrimino {
           probCell = curShape[i][j];
           probCellBelow = curShape[i+offSetY][j+offSetX];
           probBoard = board[y+i+offSetY][x+j+offSetX];
-          if ((probCell == '#')&&(probCellBelow !='#')){
+          if ((cellFilled(probCell))&&(!cellFilled(probCellBelow))){
             if (probY >= 19) {
               mvprintw(18,20,"CONTACT");
               return true;
 
             }
             if 
-              (probBoard !='.'){
+              (cellFilled(probBoard)){
                 mvprintw(18,20,"CONTACT");
                 return true;
               }
@@ -542,7 +575,7 @@ void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
     for (int x = 0; x < NCOLUMNS; x++) {
 
       char curChar = board[y][x];
-      if (curChar == '#') {
+      if (cellFilled(curChar)) {
        mvaddch(y,x,(char)0x2588);
       }
       else {
