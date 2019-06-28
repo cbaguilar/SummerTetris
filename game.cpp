@@ -177,13 +177,13 @@ class Tetrimino {
           probBoard = board[y+i+offSetY][x+j+offSetX];
           if ((cellFilled(probCell))&&(!cellFilled(probCellBelow))){
             if (probY >= 19) {
-              mvprintw(18,20,"CONTACT");
+              //mvprintw(18,20,"CONTACT");
               return true;
 
             }
             if 
               (cellFilled(probBoard)){
-                mvprintw(18,20,"CONTACT");
+               // mvprintw(18,20,"CONTACT");
                 return true;
               }
 
@@ -599,7 +599,7 @@ void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
   printw("\n");
 
   printw("X: %d Y: %d",block->getX(),block->getY());
-  mvprintw(7,14,"Lines Cleared: %i",linesCleared);
+  mvprintw(21,0,"Lines: %i",linesCleared);
   
 
 
