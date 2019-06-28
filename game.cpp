@@ -5,6 +5,14 @@
 #include <vector>
 #include <iostream>
 
+#ifdef _WIN32
+	#define DROP_TIME 15
+	#define FAST_TIME 2
+#else
+	#define DROP_TIME 100
+	#define FAST_TIME 10
+#endif
+
 const int DEBUG_DELAY = 00000;
 const int REFRESH_DELAY = 1666;
 const int NCOLUMNS = 10;
@@ -177,13 +185,13 @@ class Tetrimino {
           probBoard = board[y+i+offSetY][x+j+offSetX];
           if ((cellFilled(probCell))&&(!cellFilled(probCellBelow))){
             if (probY >= 19) {
-              //mvprintw(18,20,"CONTACT");
+
               return true;
 
             }
             if 
               (cellFilled(probBoard)){
-               // mvprintw(18,20,"CONTACT");
+
                 return true;
               }
 
@@ -595,11 +603,11 @@ void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
     debugDelay();
 
   }
-  printw(block->name.c_str());
-  printw("\n");
 
-  printw("X: %d Y: %d",block->getX(),block->getY());
-  mvprintw(21,0,"Lines: %i",linesCleared);
+  mvprintw(20,0,block->name.c_str());
+  
+  mvprintw(21,0,"X: %d Y: %d",block->getX(),block->getY());
+  mvprintw(22,0,"Lines: %i",linesCleared);
   
 
 
@@ -712,9 +720,9 @@ void flashyEffect(char board[NROWS][NCOLUMNS], vector<int>& rowsToDelete, Tetrim
 
 void clearLines(char (board)[NROWS][NCOLUMNS], Tetrimino * block) {
   //char tempBoard[NROWS][NCOLUMNS];
-  mvprintw(5,15,"Clearing lines...");
-  refresh();
-  usleep(1000);
+  //mvprintw(5,15,"Clearing lines...");
+  //refresh();
+  //usleep(1000);
 
   vector  <int> rowsToDelete;
   int probRow = 0;
@@ -722,7 +730,7 @@ void clearLines(char (board)[NROWS][NCOLUMNS], Tetrimino * block) {
   for (probRow = 0; probRow <= NROWS; probRow++) {
     for (probColumn = 0; probColumn < NCOLUMNS; probColumn++) {
       char probCell = board[probRow][probColumn];
-      mvprintw(7,15,"Probing row %i column %i tested cell %c",probRow,probColumn,probCell);
+      //mvprintw(7,15,"Probing row %i column %i tested cell %c",probRow,probColumn,probCell);
       
       
       if (!cellFilled(probCell)) {
@@ -846,7 +854,7 @@ int gameLoop(void) {
         m->hardDrop(gameboard);
         break;
       case DOWN:
-        dropTime = 10;
+        dropTime = FAST_TIME;
         break;
       case 'z':
         m = &zb;
@@ -868,7 +876,7 @@ int gameLoop(void) {
         m->move(gameboard, 1);
         break;
       default:
-        dropTime = 100;
+        dropTime = DROP_TIME-(((DROP_TIME)/10)*(linesCleared/10));
       
 
     }
@@ -878,6 +886,7 @@ int gameLoop(void) {
     refresh();
   }
   mvaddstr(10,0," GameOver");
+  mvprintw(11,0,"Lines: %i",linesCleared);
   refresh();
   return 0;
 }
@@ -889,6 +898,7 @@ int main() {
 
 
   initscr();
+  resize_term(24,10);
   curs_set(0);/*
   if (has_colors() == FALSE) {
     endwin();
@@ -928,13 +938,13 @@ int main() {
   /* on the screen until <b>refresh</b>() is called.     */
   clear();
   
-  printw("Starting game loop!\n");
+  //printw("Starting game loop!\n");
  
   refresh();
   
   
 
-  sleep(1);
+  //sleep(1);
   nodelay(stdscr, TRUE);
   gameLoop();
   sleep(1);

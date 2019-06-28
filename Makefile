@@ -1,7 +1,7 @@
 UNAME_S := $(shell uname)
 
 ifeq ($(OS),Windows_NT)
-	CXXFLAGS += -lncursesw
+	CXXFLAGS += -lncursesw -static-libgcc -static-libstdc++ 
 else
 	
 	UNAME_S := $(shell uname -s)
