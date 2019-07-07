@@ -11,5 +11,5 @@ else
 endif
 
 
-game: game.cpp
+game.out: game.cpp
 	g++  -o  $@ $< -g $(CXXFLAGS)

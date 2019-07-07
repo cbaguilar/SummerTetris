@@ -113,6 +113,60 @@ class Tetrimino {
       return (x<0)||(y<0)||(x>NCOLUMNS-1)||(y>NROWS);
     }
 
+
+     bool isIntersecting(char board[NROWS][NCOLUMNS]) {
+  
+      int probX = x;
+      int probY = y;
+      char probCell;
+      char probCellBelow;
+      char probBoard;
+      char** curShape = getShape();
+      for (int i = 0; i < 4; i++) {
+        probY = y+i;
+
+        for (int j = 0; j < 4; j++) {
+
+          probX = x+j;
+          probCell = curShape[i][j];
+          probCellBelow = curShape[i][j];
+          probBoard = board[y+i][x+j];
+          if (cellFilled(probCell)){
+            if (outOfBounds(probX,probY)) {
+             // mvprintw(18,20,"CONTACT");
+              return true;
+
+            }
+            if 
+              (probBoard !='.'){
+              //  mvprintw(18,20,"CONTACT");
+                return true;
+              }
+
+          }
+          if (DEBUG_COLLISION){
+          ::move(probY,probX);
+          addch('x');
+          refresh();
+          ::move(probY,probX);
+          usleep(100000);
+          addch(probCell);
+          mvprintw(20,15," ProbX: %d ProbY %d ",probX, probY);
+          printw("ProbC: %c ",probCell);
+          printw("ProbB: %c",probBoard);
+          refresh();
+          }
+          //usleep(1000);
+        
+
+         // probX++;
+        }
+        //probY++;
+
+      }
+      return false;
+    }
+
     bool isTouchingSide(char board[NROWS][NCOLUMNS], int offSetX) {
       int offSetY = 0;
       int probX = x;
@@ -233,15 +287,30 @@ class Tetrimino {
       return y;
     }
 
-    void rotate(int direction) {
-      orientation += direction;
+    void cycleOrientation(void){
       if (orientation == 4) {
         orientation = 0;
+
       }
 
       if (orientation == -1) {
         orientation = 3;
       }
+
+    }
+
+    void rotate(char board[NROWS][NCOLUMNS], int direction) {
+      orientation += direction;
+      cycleOrientation();      
+      // mvprintw(15,0,"rotation contact");
+       // refresh();
+       // sleep(1);
+      if(isIntersecting(board)) {
+       
+        orientation -= direction;
+      }
+      cycleOrientation();
+
     }
 
     Tetrimino () {
@@ -862,9 +931,9 @@ int gameLoop(void) {
       case 'l':
         m = &lb;
         break;
-      case ROTATE_LEFT: m->rotate(-1);
+      case ROTATE_LEFT: m->rotate(gameboard, -1);
         break;
-      case ROTATE_RIGHT: m->rotate(1);
+      case ROTATE_RIGHT: m->rotate(gameboard, 1);
         break;
       case 'q':
         gameOver = true;
