@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <vector>
 #include <iostream>
+#include <tuple>
+#include <signal.h>
 
 #ifdef _WIN32
 	#define DROP_TIME 15
@@ -12,6 +14,19 @@
 	#define DROP_TIME 100
 	#define FAST_TIME 10
 #endif
+
+#ifdef __arm__
+#include <signal.h>
+
+
+using rgb_matrix::GPIO;
+using rgb_matrix::RGBMatrix;
+using rgb_matrix::Canvas;
+#endif
+
+
+volatile bool interrupt_received = false;
+
 
 const int DEBUG_DELAY = 00000;
 const int REFRESH_DELAY = 1666;
@@ -48,6 +63,31 @@ using namespace std;
 class Tetrimino;
 
 void placeBlock(char board[NROWS][NCOLUMNS], Tetrimino* block);
+
+
+static std::tuple<int,int,int> charToRGB(char c) {
+ switch(c) {
+        case 'T':
+                return std::make_tuple(147,112,219);
+        case 'I':
+                return std::make_tuple(0,255,255);
+        case 'J':
+                return std::make_tuple(0,0,255);
+        case 'L':
+                return std::make_tuple(255,165,0);
+        case 'O':
+                return std::make_tuple(255,255,0);
+        case 'Z':
+                return std::make_tuple(0,255,0);
+        case 'S':
+                return std::make_tuple(255,0,0);
+        case '*':
+                return std::make_tuple(100,100,100);
+        default:
+                return std::make_tuple(0,0,0);
+        }
+}
+
 
 
 int charToColor(char c) {
@@ -704,6 +744,10 @@ void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
 
 
   refresh(); 
+
+  #ifdef __arm__
+  printCharArray(board);
+  #endif
 } 
 
 /*this input uses global consts so that input()
@@ -961,62 +1005,98 @@ int gameLoop(void) {
 }
 
 
-
-
-int main() {
-
-
+void initncurses(void) {
   initscr();
   resize_term(24,10);
-  curs_set(0);/*
-  if (has_colors() == FALSE) {
-    endwin();
-    printf("Terminal does not support colors");
-    exit(1);
-  }
-
-  else {
-    start_color();
-    init_pair(0, COLOR_CYAN, COLOR_BLACK);
-    init_pair(1, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(2, COLOR_MAGENTA, COLOR_BLACK);
-    init_pair(3, COLOR_GREEN, COLOR_BLACK);
-    init_pair(4, COLOR_RED, COLOR_BLACK);
-    init_pair(5, COLOR_WHITE, COLOR_BLACK);
-    init_pair(7, COLOR_BLUE, COLOR_BLACK);
-  }*/
+  curs_set(0);
   start_color();
-    init_pair(1, COLOR_CYAN, COLOR_CYAN);
-    init_pair(2, COLOR_YELLOW, COLOR_YELLOW);
-    init_pair(3, COLOR_MAGENTA, COLOR_MAGENTA);
-    init_pair(4, COLOR_GREEN, COLOR_GREEN);
-    init_pair(5, COLOR_RED, COLOR_RED);
-    init_pair(6, COLOR_WHITE, COLOR_WHITE);
-    init_pair(7, COLOR_BLUE, COLOR_BLUE);
-    init_pair(8, COLOR_WHITE, COLOR_BLACK);
+  init_pair(1, COLOR_CYAN, COLOR_CYAN);
+  init_pair(2, COLOR_YELLOW, COLOR_YELLOW);
+  init_pair(3, COLOR_MAGENTA, COLOR_MAGENTA);
+  init_pair(4, COLOR_GREEN, COLOR_GREEN);
+  init_pair(5, COLOR_RED, COLOR_RED);
+  init_pair(6, COLOR_WHITE, COLOR_WHITE);
+  init_pair(7, COLOR_BLUE, COLOR_BLUE);
+  init_pair(8, COLOR_WHITE, COLOR_BLACK);
    // init_pair(7, COLOR_BLUE, COLOR_BLACK);
 
   (void) noecho();
 
-  //addstr("What is your name> ");
-  //refresh();
-  //getnstr(users_name, sizeof(users_name) - 1);
-
-  /* Here is where we clear the screen.                  */
-  /* (Remember, when using Curses, no change will appear */
-  /* on the screen until <b>refresh</b>() is called.     */
   clear();
-  
-  //printw("Starting game loop!\n");
+
  
   refresh();
+
+ 
+}
+
+static void InterruptHandler(int signo) {
+  interrupt_received = true;
+}
+
+
+#ifdef __arm__
+static void printCharArray(Canvas *canvas, char array[NROWS][NCOLUMNS]) {
+  /*
+   * Let's create a simple animation. We use the canvas to draw
+   * pixels. We wait between each step to have a slower animation.
+   */
+  char curChar;
+  std::tuple<int,int,int> color;
+  for (int y = 0; y < NROWS; y++){
+        for (int x = 0; x < NCOLUMNS; x++) {
+        curChar = array[y][x];
+        color = charToColor(curChar);
+        canvas->SetPixel(x,y,std::get<0>(color),std::get<1>(color),std::get<2>(color));
+        }
+  }
+}
+#endif
+
+
+
+
+int main(int argc, char** argv) {
+  initncurses();
+  nodelay(stdscr, TRUE);
+  #ifdef  __arm__
+  RGBMatrix::Options defaults;
+  defaults.hardware_mapping = "regular";  // or e.g. "adafruit-hat"
+  defaults.rows = 16;
+  defaults.pixel_mapper_config = "rotate:90";
+  defaults.chain_length = 1;
+  defaults.parallel = 1;
+  defaults.show_refresh_rate = true;
+  Canvas *canvas = rgb_matrix::CreateMatrixFromFlags(&argc, &argv, &defaults);
+  if (canvas == NULL)
+    return 1;
+
+  // It is always good to set up a signal handler to cleanly exit when we
+  // receive a CTRL-C for instance. The DrawOnCanvas() routine is looking
+  // for that.
+  canvas->Fill(0,0,0);
+  signal(SIGTERM, InterruptHandler);
+  signal(SIGINT, InterruptHandler);
+  #endif
+
   
+ 
+      // Using the canvas.
+  
+  // Animation finished. Shut down the RGB matrix.
   
 
-  //sleep(1);
-  nodelay(stdscr, TRUE);
   gameLoop();
   sleep(1);
   endwin();
+
+  #ifdef __arm__
+  canvas->Clear();
+  delete canvas;
+  #endif
+
+
+
   return 0;
 }
+
