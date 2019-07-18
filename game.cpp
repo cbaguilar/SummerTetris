@@ -17,6 +17,7 @@
 
 #ifdef __arm__
 #include <signal.h>
+#include "led-matrix.h"
 
 
 using rgb_matrix::GPIO;
@@ -55,6 +56,8 @@ const int LBLOCK_COLOR = 6;
 const int JBLOCK_COLOR = 7;
 const int HASHCOLOR = 8;
 
+Canvas* cvadd;
+
 int linesCleared = 0;
 int score = 0;
 
@@ -64,23 +67,26 @@ class Tetrimino;
 
 void placeBlock(char board[NROWS][NCOLUMNS], Tetrimino* block);
 
+#ifdef __arm__
+void printCharArray(char array[NROWS][NCOLUMNS]);
+#endif
 
 static std::tuple<int,int,int> charToRGB(char c) {
  switch(c) {
         case 'T':
-                return std::make_tuple(147,112,219);
+                return std::make_tuple(128,0,128);
         case 'I':
-                return std::make_tuple(0,255,255);
+                return std::make_tuple(0,128,128);
         case 'J':
-                return std::make_tuple(0,0,255);
+                return std::make_tuple(0,0,128);
         case 'L':
-                return std::make_tuple(255,165,0);
+                return std::make_tuple(128,64,0);
         case 'O':
-                return std::make_tuple(255,255,0);
-        case 'Z':
-                return std::make_tuple(0,255,0);
+                return std::make_tuple(128,128,0);
         case 'S':
-                return std::make_tuple(255,0,0);
+                return std::make_tuple(0,128,0);
+        case 'Z':
+                return std::make_tuple(128,0,0);
         case '*':
                 return std::make_tuple(100,100,100);
         default:
@@ -125,6 +131,10 @@ bool cellFilled(char cell) {
   }
   return false;
 }
+
+ bool outOfBounds(int x,int y) {
+      return (x<0)||(y<0)||(x>NCOLUMNS-1)||(y>NROWS);
+}    
 
 class Tetrimino {
 
@@ -278,7 +288,7 @@ class Tetrimino {
           probCellBelow = curShape[i+offSetY][j+offSetX];
           probBoard = board[y+i+offSetY][x+j+offSetX];
           if ((cellFilled(probCell))&&(!cellFilled(probCellBelow))){
-            if (probY >= 19) {
+            if (probY >= NROWS-1) {
 
               return true;
 
@@ -603,6 +613,7 @@ class LBlock : public Tetrimino {
                   "    ",},
 
                 { "LL  ",
+
                   " L  ",
                   " L  ",
                   "    ",
@@ -682,6 +693,28 @@ void debugDelay (void) {
   }
 }
 
+
+#ifdef __arm__
+static void printCharArray(Canvas *canvas, char array[NROWS][NCOLUMNS]) {
+  /*
+   * Let's create a simple animation. We use the canvas to draw
+   * pixels. We wait between each step to have a slower animation.
+   */
+  char curChar;
+  std::tuple<int,int,int> color;
+  for (int y = 0; y < NROWS; y++){
+     
+      for (int x = 0; x < NCOLUMNS; x++) {
+        if(!outOfBounds(x,y)) {
+        curChar = array[y][x];
+        color = charToRGB(curChar);
+        canvas->SetPixel(x,y,std::get<0>(color),std::get<1>(color),std::get<2>(color));
+        }
+      }
+  }
+}
+#endif
+
 void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
 
   erase();
@@ -723,6 +756,7 @@ void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
 
       
       move(y,x);
+      tuple<int,int,int> color;
       for (int i = 0; i < 4; i++) {
 
         for (int j = 0; j < 4; j++) {
@@ -730,12 +764,36 @@ void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
         char c =(block->getShape()[i][j]);
         if (cellFilled(c)) {
           attron(COLOR_PAIR(charToColor(c)));
+     	 #ifdef __arm__
+           if(!outOfBounds(x+j,y+i)) {
+           color = charToRGB(c);
+           cvadd->SetPixel(x+j,y+i,std::get<0>(color),std::get<1>(color),std::get<2>(color));
+          }
+          #endif
 
           addch(DISPLAY_CH);
       
           attroff(COLOR_PAIR(charToColor(c)));
         }
-        
+	else {
+	#ifdef __arm__
+        if(!outOfBounds(x+j,y+i)) {
+	color = charToRGB(board[y+i][x+j]);
+        cvadd->SetPixel(x+j,y+i,std::get<0>(color),std::get<1>(color),std::get<2>(color));
+	}
+        #endif
+        }
+
+	#ifdef __arm__
+        if((!outOfBounds(x+i,y-1)&&!outOfBounds(x-1,y+i))) {
+	color = charToRGB(board[y-1][x+i]);
+        cvadd->SetPixel(x+i,y-1,std::get<0>(color),std::get<1>(color),std::get<2>(color));
+       
+	color = charToRGB(board[y+i][x-1]);
+        cvadd->SetPixel(x-1,y+i,std::get<0>(color),std::get<1>(color),std::get<2>(color));
+        }
+        #endif
+      
         
         }
       }
@@ -745,9 +803,6 @@ void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
 
   refresh(); 
 
-  #ifdef __arm__
-  printCharArray(board);
-  #endif
 } 
 
 /*this input uses global consts so that input()
@@ -809,6 +864,7 @@ void blinkLine(char board[NROWS][NCOLUMNS], int row) {
   
       for (int c = 0; c < NCOLUMNS; c++) {
         mvaddch(row,c,'*');
+        cvadd->SetPixel(c,row,128,128,128);
         beep();
       }
     
@@ -825,6 +881,7 @@ void flashyEffect(char board[NROWS][NCOLUMNS], vector<int>& rowsToDelete, Tetrim
       refresh();
       usleep(10000);
       display(board, block);
+      printCharArray(cvadd, board);
       refresh();
       usleep(10000);
     }
@@ -874,6 +931,9 @@ void clearLines(char (board)[NROWS][NCOLUMNS], Tetrimino * block) {
       
     
   }
+ #ifdef __arm__
+	printCharArray(cvadd,board);
+ #endif
 }
 
 /*  Here I hope to make a game loop
@@ -884,6 +944,7 @@ void clearLines(char (board)[NROWS][NCOLUMNS], Tetrimino * block) {
     we end up do
     ing that
 */
+
 
 int gameLoop(void) {
 
@@ -944,8 +1005,13 @@ int gameLoop(void) {
       clearLines(gameboard, m);
       randomizeTetrimino(&m, allBlocks);
     }
-    
+ 
+ #ifdef __arm__
+  //printCharArray(cvadd,gameboard);
+  #endif   
     display(gameboard, m);
+    
+ 
     //erase();
     //t.getShape();
     usleep(DEBUG_DELAY);
@@ -1035,24 +1101,6 @@ static void InterruptHandler(int signo) {
 }
 
 
-#ifdef __arm__
-static void printCharArray(Canvas *canvas, char array[NROWS][NCOLUMNS]) {
-  /*
-   * Let's create a simple animation. We use the canvas to draw
-   * pixels. We wait between each step to have a slower animation.
-   */
-  char curChar;
-  std::tuple<int,int,int> color;
-  for (int y = 0; y < NROWS; y++){
-        for (int x = 0; x < NCOLUMNS; x++) {
-        curChar = array[y][x];
-        color = charToColor(curChar);
-        canvas->SetPixel(x,y,std::get<0>(color),std::get<1>(color),std::get<2>(color));
-        }
-  }
-}
-#endif
-
 
 
 
@@ -1077,6 +1125,7 @@ int main(int argc, char** argv) {
   canvas->Fill(0,0,0);
   signal(SIGTERM, InterruptHandler);
   signal(SIGINT, InterruptHandler);
+  cvadd = canvas;
   #endif
 
   

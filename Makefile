@@ -6,7 +6,8 @@ else
 	
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
-		CXXFLAGS += -lncurses
+		CXXFLAGS += -lncurses -pthread -I../ledDisplay/rpi-rgb-led-matrix/include -L../ledDisplay/rpi-rgb-led-matrix/lib/ -lrgbmatrix
+
 	endif
 endif
 
