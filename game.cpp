@@ -12,7 +12,7 @@
 	#define DROP_TIME 100
 	#define FAST_TIME 10
 #endif
-
+//useless comment
 const int DEBUG_DELAY = 00000;
 const int REFRESH_DELAY = 1666;
 const int NCOLUMNS = 10;
