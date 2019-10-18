@@ -75,18 +75,9 @@ static tuple<int,int,int> charToRGB(char c);
 
 int charToColor(char c);
 
+bool cellFilled(char cell);
 
-
-bool cellFilled(char cell) {
-  for (char c : CELL_SHAPES) {
-    if (cell == c) {
-      return true;
-    }
-  }
-  return false;
-}
-
- bool outOfBounds(int x,int y) {
+bool outOfBounds(int x,int y) {
       return (x<0)||(y<0)||(x>NCOLUMNS-1)||(y>NROWS);
 }    
 
@@ -1157,3 +1148,13 @@ int charToColor(char c) {
     
   }
 }
+bool cellFilled(char cell) {
+  for (char c : CELL_SHAPES) {
+    if (cell == c) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
