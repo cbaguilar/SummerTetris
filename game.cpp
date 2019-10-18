@@ -205,8 +205,6 @@ class Tetrimino {
           refresh();
           }
           //usleep(1000);
-        
-
          // probX++;
         }
         //probY++;
@@ -616,135 +614,18 @@ void display(char board[NROWS][NCOLUMNS], Tetrimino* block);
 /*this input uses global consts so that input()
  can be substitued for something else when the
  platform or hardware change!*/
+int input();
 
-int input(void) {
-    //int ch = getch();
-    int i = getch();
-  switch (i){
-    
-     
-      case 'a':
-        return LEFT;
-        break;
-      case 'd':
-        return RIGHT;
-        break;
-        
-      default:
-      return i;
-      break;
-  }
-    //return i;
+void randomizeTetrimino(Tetrimino** block, Tetrimino *allBlocks[]);
 
-}
+void clearLine(char (board)[NROWS][NCOLUMNS], int rowToDelete);
 
+void blinkLine(char board[NROWS][NCOLUMNS], int row);
 
-void randomizeTetrimino(Tetrimino** block, Tetrimino *allBlocks[]) {
-  *block = allBlocks[(rand()%7)];
-  (*block)->reset();
+void flashyEffect(char board[NROWS][NCOLUMNS], vector<int>& rowsToDelete, 
+                    Tetrimino * block);
 
-}
-
-void clearLine(char (board)[NROWS][NCOLUMNS], int rowToDelete) {
-  char tempBoard[NROWS][NCOLUMNS];/*
-  for (int c = 0; c < NCOLUMNS; c++) { //fill top row with blanks
-    tempBoard[0][c] = '.';
-  }
-  for (int r = 1; r < rowToDelete; r++) { //copy following rows
-    for (int c = 0; c < NCOLUMNS; c++) {
-      tempBoard[r][c] = board[r-1][c];
-    }
-  }
-  */
-  for (int r = rowToDelete; r > 0; r--) {
-    for (int c = 0; c < NCOLUMNS; c++) {
-      board[r][c] = board[r-1][c];
-    }
-  }
-  for (int c = 0; c < NCOLUMNS; c++) { //fill top row with blanks
-    board[0][c] = '.';
-  }
-
-
-}
-
-void blinkLine(char board[NROWS][NCOLUMNS], int row) {
-  
-      for (int c = 0; c < NCOLUMNS; c++) {
-        mvaddch(row,c,'*');
-#ifdef __arm__
-        cvadd->SetPixel(c,row,128,128,128);
-#endif
-        beep();
-      }
-    
-  
-}
-
-void flashyEffect(char board[NROWS][NCOLUMNS], vector<int>& rowsToDelete, Tetrimino * block) {
-    for (int i = 0; i < 10; i++) {
-      for (int f = 0; f < rowsToDelete.size(); f++) {
-      blinkLine(board,rowsToDelete[f]);
-      }
-      refresh();
-      usleep(10000);
-      display(board, block);
-#ifdef __arm__
-      printCharArray(cvadd, board);
-#endif
-      refresh();
-      usleep(10000);
-    }
-  
-}
-
-void clearLines(char (board)[NROWS][NCOLUMNS], Tetrimino * block) {
-  //char tempBoard[NROWS][NCOLUMNS];
-  //mvprintw(5,15,"Clearing lines...");
-  //refresh();
-  //usleep(1000);
-
-  vector  <int> rowsToDelete;
-  int probRow = 0;
-  int probColumn = 0;
-  for (probRow = 0; probRow <= NROWS; probRow++) {
-    for (probColumn = 0; probColumn < NCOLUMNS; probColumn++) {
-      char probCell = board[probRow][probColumn];
-      //mvprintw(7,15,"Probing row %i column %i tested cell %c",probRow,probColumn,probCell);
-      
-      
-      if (!cellFilled(probCell)) {
-        break;
-      }
-      if (DEBUG_COLLISION) {
-        mvaddch(probRow,probColumn,'X');
-        refresh();
-        //usleep(100000);
-        mvaddch(probRow,probColumn,probCell);
-      }
-    }
-    if (probColumn == NCOLUMNS) {
-      rowsToDelete.push_back(probRow);
-    }
-    //mvprintw(7,15,"Row cleared");
-    refresh();
-    //usleep(100000);
-  }
-
-  flashyEffect(board, rowsToDelete, block);
-
-  for (int i = 0; i < rowsToDelete.size(); i++) {
-
-    
-      linesCleared++;
-      clearLine(board, rowsToDelete[i]);
-      
-    
-  }
- #ifdef __arm__
-	printCharArray(cvadd,board);
- #endif
-}
+void clearLines(char (board)[NROWS][NCOLUMNS], Tetrimino * block);
 
 /*  Here I hope to make a game loop
 *   that is independent of any user
@@ -754,161 +635,11 @@ void clearLines(char (board)[NROWS][NCOLUMNS], Tetrimino * block) {
     we end up do
     ing that
 */
+int gameLoop(void);
 
+void initncurses(void);
 
-int gameLoop(void) {
-
-  
-  
-  IBlock ib;
-  OBlock ob;
-  TBlock tb;
-  SBlock sb;
-  ZBlock zb;
-  LBlock lb;
-  JBlock jb;
-
-  Tetrimino *allBlocks[] = {&ib,&ob,&tb,&sb,&zb,&lb,&jb};
-
-  Tetrimino* m = &tb;
-  //*m.getShape();
-  //sleep(1);
-
-  char gameboard[NROWS][NCOLUMNS];
-  /*for (auto& row : gameboard) {
-    for(auto& c  : row) {
-      c = '0';sle==
-    }
-  }*/
-
-  for (int y = 0; y < NROWS; y++) {
-    for (int x = 0; x < NCOLUMNS; x++) {
-      gameboard[y][x] = '.';
-    }
-  }
-
-  bool gameOver = false;
-  
-  int landTime = 0;
-  int dropTic = 0;
-  int dropTime = 100;
-  while (!gameOver){
-   //char i = input();
-   //mvprintw(10,10,"Hey %s",""+getch());
-   //debugDelay();
-   //refresh();
-   
-
-
-    if (dropTic > dropTime) {
-      dropTic = 0;
-     m->fall(gameboard); 
-        
-    }
-    dropTic++;
-
-    if (m->isRespawnReady()) {
-      if (m->getY() == 0) {
-        gameOver = true;
-      }
-      placeBlock(gameboard, m);
-      clearLines(gameboard, m);
-      randomizeTetrimino(&m, allBlocks);
-    }
- 
- #ifdef __arm__
-  //printCharArray(cvadd,gameboard);
-  #endif   
-    display(gameboard, m);
-    
- 
-    //erase();
-    //t.getShape();
-    usleep(DEBUG_DELAY);
-    usleep(REFRESH_DELAY);
-
-
-   
-   switch (input()){
-      case 't':
-        m = allBlocks[rand()%7];
-        break;
-      case 'o':
-        m = allBlocks[1];
-        break;
-      case 'i':
-        m = &ib;
-        break;
-      case UP:
-        m->hardDrop(gameboard);
-        break;
-      case DOWN:
-        dropTime = FAST_TIME;
-        break;
-      case 'z':
-        m = &zb;
-        break;
-      case 'l':
-        m = &lb;
-        break;
-      case ROTATE_LEFT: m->rotate(gameboard, -1);
-        break;
-      case ROTATE_RIGHT: m->rotate(gameboard, 1);
-        break;
-      case 'q':
-        gameOver = true;
-        break;
-      case LEFT:
-        m->move(gameboard, -1);
-        break;
-      case RIGHT:
-        m->move(gameboard, 1);
-        break;
-      default:
-        dropTime = DROP_TIME-(((DROP_TIME)/10)*(linesCleared/10));
-      
-
-    }
-     //mvprintw(14,10,"Number = %s",*allBlocks[(rand()%8)]->name);
-
-    
-    refresh();
-  }
-  mvaddstr(10,0," GameOver");
-  mvprintw(11,0,"Lines: %i",linesCleared);
-  refresh();
-  return 0;
-}
-
-
-void initncurses(void) {
-  initscr();
-  resize_term(24,10);
-  curs_set(0);
-  start_color();
-  init_pair(1, COLOR_CYAN, COLOR_CYAN);
-  init_pair(2, COLOR_YELLOW, COLOR_YELLOW);
-  init_pair(3, COLOR_MAGENTA, COLOR_MAGENTA);
-  init_pair(4, COLOR_GREEN, COLOR_GREEN);
-  init_pair(5, COLOR_RED, COLOR_RED);
-  init_pair(6, COLOR_WHITE, COLOR_WHITE);
-  init_pair(7, COLOR_BLUE, COLOR_BLUE);
-  init_pair(8, COLOR_WHITE, COLOR_BLACK);
-   // init_pair(7, COLOR_BLUE, COLOR_BLACK);
-
-  (void) noecho();
-
-  clear();
-
- 
-  refresh();
-
- 
-}
-
-static void InterruptHandler(int signo) {
-  interrupt_received = true;
-}
+static void InterruptHandler(int signo);
 
 int main(int argc, char** argv) {
   initncurses();
@@ -1146,4 +877,281 @@ void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
         }
       }
   refresh(); 
+}
+
+int input(void) {
+    //int ch = getch();
+    int i = getch();
+  switch (i){
+      case 'a':
+        return LEFT;
+        break;
+      case 'd':
+        return RIGHT;
+        break;
+      default:
+        return i;
+      break;
+  }
+    //return i;
+
+}
+
+void randomizeTetrimino(Tetrimino** block, Tetrimino *allBlocks[]){
+  *block = allBlocks[(rand()%7)];
+  (*block)->reset();
+
+}
+
+void clearLine(char (board)[NROWS][NCOLUMNS], int rowToDelete){
+  char tempBoard[NROWS][NCOLUMNS];/*
+  for (int c = 0; c < NCOLUMNS; c++) { //fill top row with blanks
+    tempBoard[0][c] = '.';
+  }
+  for (int r = 1; r < rowToDelete; r++) { //copy following rows
+    for (int c = 0; c < NCOLUMNS; c++) {
+      tempBoard[r][c] = board[r-1][c];
+    }
+  }
+  */
+  for (int r = rowToDelete; r > 0; r--) {
+    for (int c = 0; c < NCOLUMNS; c++) {
+      board[r][c] = board[r-1][c];
+    }
+  }
+  for (int c = 0; c < NCOLUMNS; c++) { //fill top row with blanks
+    board[0][c] = '.';
+  }
+
+
+}
+
+void blinkLine(char board[NROWS][NCOLUMNS], int row) {
+  
+      for (int c = 0; c < NCOLUMNS; c++) {
+        mvaddch(row,c,'*');
+#ifdef __arm__
+        cvadd->SetPixel(c,row,128,128,128);
+#endif
+        beep();
+      }
+    
+  
+}
+
+void flashyEffect(char board[NROWS][NCOLUMNS], vector<int>& rowsToDelete, 
+        Tetrimino * block) {
+      for (int i = 0; i < 10; i++) {
+      for (int f = 0; f < rowsToDelete.size(); f++) {
+      blinkLine(board,rowsToDelete[f]);
+      }
+      refresh();
+      usleep(10000);
+      display(board, block);
+#ifdef __arm__
+      printCharArray(cvadd, board);
+#endif
+      refresh();
+      usleep(10000);
+    }
+  
+}
+
+void clearLines(char (board)[NROWS][NCOLUMNS], Tetrimino * block) {
+  //char tempBoard[NROWS][NCOLUMNS];
+  //mvprintw(5,15,"Clearing lines...");
+  //refresh();
+  //usleep(1000);
+
+  vector  <int> rowsToDelete;
+  int probRow = 0;
+  int probColumn = 0;
+  for (probRow = 0; probRow <= NROWS; probRow++) {
+    for (probColumn = 0; probColumn < NCOLUMNS; probColumn++) {
+      char probCell = board[probRow][probColumn];
+      //mvprintw(7,15,"Probing row %i column %i tested cell %c",probRow,probColumn,probCell);
+      
+      
+      if (!cellFilled(probCell)) {
+        break;
+      }
+      if (DEBUG_COLLISION) {
+        mvaddch(probRow,probColumn,'X');
+        refresh();
+        //usleep(100000);
+        mvaddch(probRow,probColumn,probCell);
+      }
+    }
+    if (probColumn == NCOLUMNS) {
+      rowsToDelete.push_back(probRow);
+    }
+    //mvprintw(7,15,"Row cleared");
+    refresh();
+    //usleep(100000);
+  }
+
+  flashyEffect(board, rowsToDelete, block);
+
+  for (int i = 0; i < rowsToDelete.size(); i++) {
+
+    
+      linesCleared++;
+      clearLine(board, rowsToDelete[i]);
+      
+    
+  }
+ #ifdef __arm__
+	printCharArray(cvadd,board);
+ #endif
+}
+
+int gameLoop(void) {
+  IBlock ib;
+  OBlock ob;
+  TBlock tb;
+  SBlock sb;
+  ZBlock zb;
+  LBlock lb;
+  JBlock jb;
+
+  Tetrimino *allBlocks[] = {&ib,&ob,&tb,&sb,&zb,&lb,&jb};
+
+  Tetrimino* m = &tb;
+  //*m.getShape();
+  //sleep(1);
+
+  char gameboard[NROWS][NCOLUMNS];
+  /*for (auto& row : gameboard) {
+    for(auto& c  : row) {
+      c = '0';sle==
+    }
+  }*/
+
+  for (int y = 0; y < NROWS; y++) {
+    for (int x = 0; x < NCOLUMNS; x++) {
+      gameboard[y][x] = '.';
+    }
+  }
+
+  bool gameOver = false;
+  
+  int landTime = 0;
+  int dropTic = 0;
+  int dropTime = 100;
+  while (!gameOver){
+   //char i = input();
+   //mvprintw(10,10,"Hey %s",""+getch());
+   //debugDelay();
+   //refresh();
+   
+
+
+    if (dropTic > dropTime) {
+      dropTic = 0;
+     m->fall(gameboard); 
+        
+    }
+    dropTic++;
+
+    if (m->isRespawnReady()) {
+      if (m->getY() == 0) {
+        gameOver = true;
+      }
+      placeBlock(gameboard, m);
+      clearLines(gameboard, m);
+      randomizeTetrimino(&m, allBlocks);
+    }
+ 
+ #ifdef __arm__
+  //printCharArray(cvadd,gameboard);
+  #endif   
+    display(gameboard, m);
+    
+ 
+    //erase();
+    //t.getShape();
+    usleep(DEBUG_DELAY);
+    usleep(REFRESH_DELAY);
+
+
+   
+   switch (input()){
+      case 't':
+        m = allBlocks[rand()%7];
+        break;
+      case 'o':
+        m = allBlocks[1];
+        break;
+      case 'i':
+        m = &ib;
+        break;
+      case UP:
+        m->hardDrop(gameboard);
+        break;
+      case DOWN:
+        dropTime = FAST_TIME;
+        break;
+      case 'z':
+        m = &zb;
+        break;
+      case 'l':
+        m = &lb;
+        break;
+      case ROTATE_LEFT: m->rotate(gameboard, -1);
+        break;
+      case ROTATE_RIGHT: m->rotate(gameboard, 1);
+        break;
+      case 'q':
+        gameOver = true;
+        break;
+      case LEFT:
+        m->move(gameboard, -1);
+        break;
+      case RIGHT:
+        m->move(gameboard, 1);
+        break;
+      default:
+        dropTime = DROP_TIME-(((DROP_TIME)/10)*(linesCleared/10));
+      
+
+    }
+     //mvprintw(14,10,"Number = %s",*allBlocks[(rand()%8)]->name);
+
+    
+    refresh();
+  }
+  mvaddstr(10,0," GameOver");
+  mvprintw(11,0,"Lines: %i",linesCleared);
+  refresh();
+  return 0;
+}
+
+
+void initncurses(void) {
+  initscr();
+  resize_term(24,10);
+  curs_set(0);
+  start_color();
+  init_pair(1, COLOR_CYAN, COLOR_CYAN);
+  init_pair(2, COLOR_YELLOW, COLOR_YELLOW);
+  init_pair(3, COLOR_MAGENTA, COLOR_MAGENTA);
+  init_pair(4, COLOR_GREEN, COLOR_GREEN);
+  init_pair(5, COLOR_RED, COLOR_RED);
+  init_pair(6, COLOR_WHITE, COLOR_WHITE);
+  init_pair(7, COLOR_BLUE, COLOR_BLUE);
+  init_pair(8, COLOR_WHITE, COLOR_BLACK);
+   // init_pair(7, COLOR_BLUE, COLOR_BLACK);
+
+  (void) noecho();
+
+  clear();
+
+ 
+  refresh();
+
+ 
+}
+
+static void InterruptHandler(int signo) {
+  interrupt_received = true;
 }
