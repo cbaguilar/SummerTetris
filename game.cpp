@@ -55,9 +55,9 @@ const int ZBLOCK_COLOR = 5;
 const int LBLOCK_COLOR = 6;
 const int JBLOCK_COLOR = 7;
 const int HASHCOLOR = 8;
-
+#ifdef __arm__
 Canvas* cvadd;
-
+#endif
 int linesCleared = 0;
 int score = 0;
 
@@ -71,57 +71,11 @@ void placeBlock(char board[NROWS][NCOLUMNS], Tetrimino* block);
 void printCharArray(char array[NROWS][NCOLUMNS]);
 #endif
 
-static std::tuple<int,int,int> charToRGB(char c) {
- switch(c) {
-        case 'T':
-                return std::make_tuple(128,0,128);
-        case 'I':
-                return std::make_tuple(0,128,128);
-        case 'J':
-                return std::make_tuple(0,0,128);
-        case 'L':
-                return std::make_tuple(128,64,0);
-        case 'O':
-                return std::make_tuple(128,128,0);
-        case 'S':
-                return std::make_tuple(0,128,0);
-        case 'Z':
-                return std::make_tuple(128,0,0);
-        case '*':
-                return std::make_tuple(100,100,100);
-        default:
-                return std::make_tuple(0,0,0);
-        }
-}
+static tuple<int,int,int> charToRGB(char c);
+
+int charToColor(char c);
 
 
-
-int charToColor(char c) {
-  //mvprintw(3,10,"%c",c);
-  //refresh();
-  switch (c) {
-    case 'I': 
-      return IBLOCK_COLOR;
-    case 'O':
-      return OBLOCK_COLOR;
-    case 'T':
-      return TBLOCK_COLOR;
-    case 'S':
-      return SBLOCK_COLOR;
-    case 'Z':
-      return ZBLOCK_COLOR;
-    case 'L':
-      return LBLOCK_COLOR;
-    case 'J':
-      return JBLOCK_COLOR;
-    case '#':
-      return HASHCOLOR;
-    default:
-      return HASHCOLOR;
-
-    
-  }
-}
 
 bool cellFilled(char cell) {
   for (char c : CELL_SHAPES) {
@@ -864,7 +818,9 @@ void blinkLine(char board[NROWS][NCOLUMNS], int row) {
   
       for (int c = 0; c < NCOLUMNS; c++) {
         mvaddch(row,c,'*');
+#ifdef __arm__
         cvadd->SetPixel(c,row,128,128,128);
+#endif
         beep();
       }
     
@@ -881,7 +837,9 @@ void flashyEffect(char board[NROWS][NCOLUMNS], vector<int>& rowsToDelete, Tetrim
       refresh();
       usleep(10000);
       display(board, block);
+#ifdef __arm__
       printCharArray(cvadd, board);
+#endif
       refresh();
       usleep(10000);
     }
@@ -1149,3 +1107,53 @@ int main(int argc, char** argv) {
   return 0;
 }
 
+static std::tuple<int,int,int> charToRGB(char c) {
+ switch(c) {
+        case 'T':
+                return std::make_tuple(128,0,128);
+        case 'I':
+                return std::make_tuple(0,128,128);
+        case 'J':
+                return std::make_tuple(0,0,128);
+        case 'L':
+                return std::make_tuple(128,64,0);
+        case 'O':
+                return std::make_tuple(128,128,0);
+        case 'S':
+                return std::make_tuple(0,128,0);
+        case 'Z':
+                return std::make_tuple(128,0,0);
+        case '*':
+                return std::make_tuple(100,100,100);
+        default:
+                return std::make_tuple(0,0,0);
+        }
+
+
+}
+int charToColor(char c) {
+  //mvprintw(3,10,"%c",c);
+  //refresh();
+  switch (c) {
+    case 'I': 
+      return IBLOCK_COLOR;
+    case 'O':
+      return OBLOCK_COLOR;
+    case 'T':
+      return TBLOCK_COLOR;
+    case 'S':
+      return SBLOCK_COLOR;
+    case 'Z':
+      return ZBLOCK_COLOR;
+    case 'L':
+      return LBLOCK_COLOR;
+    case 'J':
+      return JBLOCK_COLOR;
+    case '#':
+      return HASHCOLOR;
+    default:
+      return HASHCOLOR;
+
+    
+  }
+}
