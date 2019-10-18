@@ -77,9 +77,9 @@ int charToColor(char c);
 
 bool cellFilled(char cell);
 
-bool outOfBounds(int x,int y) {
-      return (x<0)||(y<0)||(x>NCOLUMNS-1)||(y>NROWS);
-}    
+bool outOfBounds(int x, int y);
+
+
 
 class Tetrimino {
 
@@ -320,9 +320,6 @@ class Tetrimino {
       return (touchTimer > 3);
     }
 
-
-
-
     void fall (char board[NROWS][NCOLUMNS]) {
 
       if (!isTouchingFloor(board,0,1)) {
@@ -394,8 +391,6 @@ class IBlock : public Tetrimino {
       shapes = &m_shapes;
     }
 };
-
-
 
 class TBlock : public Tetrimino {
 
@@ -607,148 +602,16 @@ class JBlock : public Tetrimino {
       shapes = &m_shapes;
     }
 };
+void placeBlock(char (board)[NROWS][NCOLUMNS], Tetrimino *block);
 
-void placeBlock(char (board)[NROWS][NCOLUMNS], Tetrimino *block) {
-
-  int x =  block->getX();
-  int y = block->getY();
-
-
-  for (int i = 0; i < 4; i++) {
-
-        for (int j = 0; j < 4; j++) {
-       
-        char c =(block->getShape()[i][j]);
-        if (c!= ' ') {
-          board[y+i][x+j] = c;
-          if(DEBUG_COLLISION) {
-            mvaddch(y+i,x+j,c);
-            usleep(400000);
-            refresh();
-            }
-          }  
-        }
-      }
-    }
-
-void debugDelay (void) {
-  usleep(DEBUG_DELAY);
-  if (DEBUG_DELAY > 0) {
-    refresh();
-  }
-}
-
+void debugDelay(void);
 
 #ifdef __arm__
-static void printCharArray(Canvas *canvas, char array[NROWS][NCOLUMNS]) {
-  /*
-   * Let's create a simple animation. We use the canvas to draw
-   * pixels. We wait between each step to have a slower animation.
-   */
-  char curChar;
-  std::tuple<int,int,int> color;
-  for (int y = 0; y < NROWS; y++){
-     
-      for (int x = 0; x < NCOLUMNS; x++) {
-        if(!outOfBounds(x,y)) {
-        curChar = array[y][x];
-        color = charToRGB(curChar);
-        canvas->SetPixel(x,y,std::get<0>(color),std::get<1>(color),std::get<2>(color));
-        }
-      }
-  }
-}
+static void printCharArray(Canvas *canvas, cgar arrat[NROWS][NCOLUMNS]);
 #endif
 
-void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
-
-  erase();
-  
-  int x = block->getX();
-  int y = block->getY();
-  printw("Score: %s",""+10);
-  for (int y = 0; y < NROWS; y++){
-   
-    for (int x = 0; x < NCOLUMNS; x++) {
-
-      char curChar = board[y][x];
-      attron(COLOR_PAIR(charToColor(curChar)));
-      if (cellFilled(curChar)) {
-       
-       mvaddch(y,x,DISPLAY_CH);
-       //attroff(COLOR_PAIR(3));
-      }
-      else {
-
-        mvaddch(y,x,curChar);
-      }
-      attroff(COLOR_PAIR(charToColor(curChar)));
-      //refresh();
-      //usleep(DEBUG_DELAY);
-    }
-    //mvaddnstr(y+1,0,board[y],10);
-    debugDelay();
-
-  }
-
-  mvprintw(20,0,block->name.c_str());
-  
-  mvprintw(21,0,"X: %d Y: %d",block->getX(),block->getY());
-  mvprintw(22,0,"Lines: %i",linesCleared);
-  
-
-
-
-      
-      move(y,x);
-      tuple<int,int,int> color;
-      for (int i = 0; i < 4; i++) {
-
-        for (int j = 0; j < 4; j++) {
-       move(y+i,x+j);
-        char c =(block->getShape()[i][j]);
-        if (cellFilled(c)) {
-          attron(COLOR_PAIR(charToColor(c)));
-     	 #ifdef __arm__
-           if(!outOfBounds(x+j,y+i)) {
-           color = charToRGB(c);
-           cvadd->SetPixel(x+j,y+i,std::get<0>(color),std::get<1>(color),std::get<2>(color));
-          }
-          #endif
-
-          addch(DISPLAY_CH);
-      
-          attroff(COLOR_PAIR(charToColor(c)));
-        }
-	else {
-	#ifdef __arm__
-        if(!outOfBounds(x+j,y+i)) {
-	color = charToRGB(board[y+i][x+j]);
-        cvadd->SetPixel(x+j,y+i,std::get<0>(color),std::get<1>(color),std::get<2>(color));
-	}
-        #endif
-        }
-
-	#ifdef __arm__
-        if((!outOfBounds(x+i,y-1)&&!outOfBounds(x-1,y+i))) {
-	color = charToRGB(board[y-1][x+i]);
-        cvadd->SetPixel(x+i,y-1,std::get<0>(color),std::get<1>(color),std::get<2>(color));
-       
-	color = charToRGB(board[y+i][x-1]);
-        cvadd->SetPixel(x-1,y+i,std::get<0>(color),std::get<1>(color),std::get<2>(color));
-        }
-        #endif
-      
-        
-        }
-      }
-      
-     
-
-
-  refresh(); 
-
-} 
+void display(char board[NROWS][NCOLUMNS], Tetrimino* block);
+ 
 
 /*this input uses global consts so that input()
  can be substitued for something else when the
@@ -819,8 +682,6 @@ void blinkLine(char board[NROWS][NCOLUMNS], int row) {
 }
 
 void flashyEffect(char board[NROWS][NCOLUMNS], vector<int>& rowsToDelete, Tetrimino * block) {
-  
-
     for (int i = 0; i < 10; i++) {
       for (int f = 0; f < rowsToDelete.size(); f++) {
       blinkLine(board,rowsToDelete[f]);
@@ -1049,10 +910,6 @@ static void InterruptHandler(int signo) {
   interrupt_received = true;
 }
 
-
-
-
-
 int main(int argc, char** argv) {
   initncurses();
   nodelay(stdscr, TRUE);
@@ -1158,3 +1015,135 @@ bool cellFilled(char cell) {
 }
 
 
+bool outOfBounds(int x,int y) {
+      return (x<0)||(y<0)||(x>NCOLUMNS-1)||(y>NROWS);
+}    
+
+void placeBlock(char (board)[NROWS][NCOLUMNS], Tetrimino *block){
+  int x =  block->getX();
+  int y = block->getY();
+  for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+        char c =(block->getShape()[i][j]);
+        if (c!= ' ') {
+          board[y+i][x+j] = c;
+          if(DEBUG_COLLISION) {
+            mvaddch(y+i,x+j,c);
+            usleep(400000);
+            refresh();
+            }
+          }  
+        }
+      }
+}
+
+void debugDelay (void) {
+  usleep(DEBUG_DELAY);
+  if (DEBUG_DELAY > 0) {
+    refresh();
+  }
+}
+
+#ifdef __arm__
+static void printCharArray(Canvas *canvas, char array[NROWS][NCOLUMNS]) {
+  /*
+   * Let's create a simple animation. We use the canvas to draw
+   * pixels. We wait between each step to have a slower animation.
+   */
+  char curChar;
+  std::tuple<int,int,int> color;
+  for (int y = 0; y < NROWS; y++){
+     
+      for (int x = 0; x < NCOLUMNS; x++) {
+        if(!outOfBounds(x,y)) {
+        curChar = array[y][x];
+        color = charToRGB(curChar);
+        canvas->SetPixel(x,y,std::get<0>(color),std::get<1>(color),std::get<2>(color));
+        }
+      }
+  }
+}
+#endif
+
+void display (char board[NROWS][NCOLUMNS], Tetrimino * block) {
+
+  erase();
+  
+  int x = block->getX();
+  int y = block->getY();
+  printw("Score: %s",""+10);
+  for (int y = 0; y < NROWS; y++){
+   
+    for (int x = 0; x < NCOLUMNS; x++) {
+
+      char curChar = board[y][x];
+      attron(COLOR_PAIR(charToColor(curChar)));
+      if (cellFilled(curChar)) {
+       
+       mvaddch(y,x,DISPLAY_CH);
+       //attroff(COLOR_PAIR(3));
+      }
+      else {
+
+        mvaddch(y,x,curChar);
+      }
+      attroff(COLOR_PAIR(charToColor(curChar)));
+      //refresh();
+      //usleep(DEBUG_DELAY);
+    }
+    //mvaddnstr(y+1,0,board[y],10);
+    debugDelay();
+
+  }
+
+  mvprintw(20,0,block->name.c_str());
+  
+  mvprintw(21,0,"X: %d Y: %d",block->getX(),block->getY());
+  mvprintw(22,0,"Lines: %i",linesCleared);
+      
+      move(y,x);
+      tuple<int,int,int> color;
+      for (int i = 0; i < 4; i++) {
+
+        for (int j = 0; j < 4; j++) {
+       move(y+i,x+j);
+        char c =(block->getShape()[i][j]);
+        if (cellFilled(c)) {
+          attron(COLOR_PAIR(charToColor(c)));
+     	 #ifdef __arm__
+           if(!outOfBounds(x+j,y+i)) {
+           color = charToRGB(c);
+           cvadd->SetPixel(x+j,y+i,std::get<0>(color),std::get<1>(color),
+                   std::get<2>(color));
+          }
+          #endif
+
+          addch(DISPLAY_CH);
+      
+          attroff(COLOR_PAIR(charToColor(c)));
+        }
+	else {
+	#ifdef __arm__
+        if(!outOfBounds(x+j,y+i)) {
+	    color = charToRGB(board[y+i][x+j]);
+        cvadd->SetPixel(x+j,y+i,std::get<0>(color),std::get<1>(color),
+                std::get<2>(color));
+	}
+        #endif
+        }
+
+	#ifdef __arm__
+        if((!outOfBounds(x+i,y-1)&&!outOfBounds(x-1,y+i))) {
+	      color = charToRGB(board[y-1][x+i]);
+          cvadd->SetPixel(x+i,y-1,std::get<0>(color),std::get<1>(color),
+                  std::get<2>(color));
+       
+	      color = charToRGB(board[y+i][x-1]);
+          cvadd->SetPixel(x-1,y+i,std::get<0>(color),std::get<1>(color),
+                  std::get<2>(color));
+        }
+        #endif
+        }
+      }
+  refresh(); 
+}
